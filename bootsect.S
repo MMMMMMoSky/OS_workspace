@@ -9,7 +9,6 @@
 
         ljmp $BOOTSEG, $_bootstart
 _bootstart:
-# 1. load setup.S to [0x8000, 0x8800)
         # Get cursor position (dl, dh)
         mov $0x03, %ah
         int $0x10
@@ -21,13 +20,15 @@ _bootstart:
         mov $0x000b, %bx
         mov $24, %cx						# length of string
         int $0x10
+load_setup:
+# 1. load setup.S to [0x8000, 0x8800)
         # load 2nd ~ 5th sector to [0x8000, 0x8800)
         mov $0x0000, %dx					# Drive 0 (A, floppy), Head 0
         mov $0x0002, %cx					# C0S2 (sector indexed from 1)
         mov $SETUPSEG, %ax					# load to ES:BX
         mov %ax, %es
-        mov $0x0200, %bx		
-        mov $4, %al							# read 4 sectors
+        mov $0x00, %bx		
+        mov $4, %al						# read 4 sectors
         mov $02, %ah						
         int $0x13				
 

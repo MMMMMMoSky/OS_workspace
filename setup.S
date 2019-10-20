@@ -6,12 +6,12 @@
         # Print string: Executing setup program
         mov $0x03, %ah
         int $0x10
-        mov $BOOTSEG, %ax
+        mov $SETUPSEG, %ax
         mov %ax, %es
-        mov $str_loading_setup, %bp
+        mov $str_exec_setup, %bp
         mov $0x1301, %ax
         mov $0x000b, %bx
-        mov $24, %cx                        # length of string
+        mov $26, %cx                        # length of string
         int $0x10
 
 hltloop:
