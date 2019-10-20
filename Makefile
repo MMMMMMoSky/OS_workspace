@@ -6,21 +6,21 @@ run: Image
 bootsect.o: bootsect.S
 	@as --32 bootsect.S -o bootsect.o
 
-bootsect: bootsect.o ld-bootsect.ld
-	@ld -T ld-bootsect.ld bootsect.o -o bootsect
+bootsect: bootsect.o ld_script.ld
+	@ld -T ld_script.ld bootsect.o -o bootsect
 	@objcopy -O binary -j .text bootsect
 
-demo.o: demo.S 
-	@as --32 demo.S -o demo.o
+setup.o: setup.S 
+	@as --32 setup.S -o setup.o
 
-demo: demo.o 
-	@ld -T ld-bootsect.ld demo.o -o demo
-	@objcopy -O binary -j .text demo
+setup: setup.o ld_script.ld
+	@ld -T ld_script.ld setup.o -o setup
+	@objcopy -O binary -j .text setup
 
-Image: bootsect demo
+Image: bootsect setup
 	@dd if=bootsect of=Image bs=512 count=1
-	@dd if=demo of=Image bs=512 count=4 seek=1
+	@dd if=setup of=Image bs=512 count=4 seek=1
 	@echo "Image built done"
 
 clean:
-	@rm -f *.o bootsect demo Image
+	@rm -f *.o bootsect setup Image
