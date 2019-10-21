@@ -62,25 +62,31 @@ _start:
         mov $SYSINITSEG, %ax
         add $0x3e0, %ax                         # we have read 31 sectors
         push %ax                                # start address
-        push $0x0100                            # cylinder and sector
+        push $0x0101                            # cylinder and sector
         push $0x0000                            # head and drive
 load_c1_c20:
-        # DEBUG
-        # Print string: load ok
-        mov $str_ok, %ax
-        mov $4, %cx
-        call print_str
-
         pop %dx
         pop %cx
         pop %es
         cmp $21, %ch
         je load_system_ok
-        mov $0x00, %dl
-        mov $0x01, %cl
-        mov $18, %al
-        mov $02, %ah						
+        mov $0x0212, %ax
         int $0x13				
+
+        # DEBUG: print registers
+        push %bx
+        call print_endl
+        and $0x00ff, %ax
+        mov %ax, %bx
+        call print_hex
+        mov %cx, %bx
+        call print_hex
+        mov %dx, %bx
+        call print_hex
+        mov %es, %bx
+        call print_hex
+        pop %bx
+
         jc load_system_failed
         cmp $18, %al 
         jne load_system_failed
@@ -152,6 +158,20 @@ print_hex_end:
         popf
         pop %dx
         pop %cx
+        pop %ax
+        ret
+
+.type print_endl, @function
+print_endl:
+        push %ax
+        push %bx
+        mov $0x000b, %bx
+        mov $0x0e, %ah
+        mov $0x0a, %al
+        int $0x10
+        mov $0x0d, %al
+        int $0x10
+        pop %bx
         pop %ax
         ret
 
