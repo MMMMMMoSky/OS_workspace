@@ -63,11 +63,52 @@ load_system_loop:
 
         # Print string: load ok
         mov $str_ok, %ax
-        mov $4, %cx
+        mov $2, %cx
         call print_str
+        call print_endl
+
+# 2. Enable A20 mode
+        # Print string: enable a20
+        mov $str_enableA20, %ax
+        mov $18, %cx
+        call print_str
+
+        in $0x92, %al
+        or $0x02, %al 
+        out %al, $0x92
+
+        # Check memory, returns bx in units of 64kb
+        mov $0xe801, %ax 
+        int $0x15
+        jc enable_a20_failed
+
+        shr $10, %ax                    # calc memory size
+        shr $4, %bx
+        add %ax, %bx
+
+        # Print string: ok
+        mov $str_ok, %ax
+        mov $2, %cx
+        call print_str
+        call print_space
+        
+        call print_hex                  # print memory size
+        call print_space
+        #Print string: Mb memory total
+        mov $str_mb_memory, %ax
+        mov $18, %cx
+        call print_str
+
 
 hltloop:
         hlt
+        jmp hltloop
+
+enable_a20_failed:
+        # Print string: enable a20 failed
+        mov $str_enableA20_failed, %ax
+        mov $13, %cx
+        call print_str
         jmp hltloop
 
 load_system_failed:
@@ -81,6 +122,7 @@ load_system_failed:
 .type print_hex, @function
 print_hex:
         push %ax
+        push %bx
         push %cx
         push %dx
         pushf
@@ -117,6 +159,7 @@ print_hex_end:
         popf
         pop %dx
         pop %cx
+        pop %bx
         pop %ax
         ret
 
@@ -134,16 +177,32 @@ print_endl:
         pop %ax
         ret
 
+.type print_space, @function
+print_space:
+        push %ax
+        push %bx
+        mov $0x000b, %bx
+        mov $0x0e, %ah
+        mov $0x20, %al
+        int $0x10
+        pop %bx
+        pop %ax
+        ret
+
+
 # print a string, ds:ax, length: cx
 .type print_str, @function
 print_str:
         push %bp
         push %es
+        push %ax
         push %bx
+        push %cx
         push %dx
 
         push %ax
         push %cx 
+        mov $0x0000, %bx                # TODO: Maybe a bug
         mov $0x03, %ah
         int $0x10
         pop %cx
@@ -151,11 +210,13 @@ print_str:
         mov %ds, %ax
         mov %ax, %es
         mov $0x1301, %ax
-        mov $0x000b, %bx
+        mov $0x0007, %bx
         int $0x10
 
         pop %dx 
+        pop %cx
         pop %bx
+        pop %ax
         pop %es
         pop %bp
         ret
@@ -170,21 +231,18 @@ str_failed_load_sys:
         .ascii "Failed\n\r\n\rCheck your disk/floppy or try to restart!"
 
 str_ok:
-        .ascii "ok\n\r"
+        .ascii "ok"
 
+str_enableA20:
+        .ascii "Enable A20 mode..."
+        
+str_enableA20_failed:
+        .ascii "Failed\n\r\n\rMemory error."
+
+str_mb_memory:
+        .ascii "Mb memory total.\n\r"
 
 # May be useful later
-
-# # Extend momory store
-# # 0x15 0x88
-# 		mov $0x88, %ah
-# 		int $0x15
-# 		mov %ax, %ds:2
-
-# # Enable A20
-# 		in $0x92, %al
-# 		or $0x02, %al 
-# 		out %al, $0x92
 
 # # VGA Display Mode 
 # 		mov $0x12, %ah 
