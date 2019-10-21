@@ -8,9 +8,12 @@
         mov %ax, %ss
         mov $0xff, %ax 
         mov %ax, %sp 
+        # Set Data Segment
+        mov $SETUPSEG, %ax
+        mov %ax, %ds
 
-        mov $SETUPSEG, %ax 
-        mov $str_exec_setup, %bx
+        # Print string: execute setup
+        mov $str_exec_setup, %ax
         mov $28, %cx                        # length of string
         call print_str
 
@@ -18,20 +21,26 @@ hltloop:
         hlt
         jmp hltloop
 
-# print a string, ax:bx, length: cx
+# print a string, ds:ax, length: cx
 .type print_str, @function
 print_str:
+        push %bp
+        push %es
+
         push %ax
-        push %bx
         push %cx 
         mov $0x03, %ah
         int $0x10
         pop %cx
         pop %bp
-        pop %es
+        mov %ds, %ax
+        mov %ax, %es
         mov $0x1301, %ax
         mov $0x000b, %bx
         int $0x10
+
+        push %es
+        push %bp
         ret
 
 str_exec_setup:
