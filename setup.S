@@ -3,6 +3,7 @@
 
 .equ SETUPSEG, 0x8000                       # must be the same as bootsect.S
 .equ SYSINITSEG, 0x1000                     # the begining position of system
+.equ SYSSIZE, 0x59600                       # C0-H0-S6 ~ C19-H1-S18, 357kb
 
 _start:
         # Set stack pointer 0x8900:0xff
@@ -99,6 +100,74 @@ load_system_loop:
         mov $18, %cx
         call print_str
 
+# 3. VGA 0x12 640x280x16
+        mov $str_enter_vga, %ax
+        mov $30, %cx
+        call print_str
+
+        # VGA Mode
+        mov $0x0012, %ax
+        int $0x10
+
+        # FIXME 可能还有一些参数没有保存
+
+        cli                     # clear interrupt bit (close int)
+# 4. Move System to 0x00000 ~ SYSSIZE
+        # Move [0x10000, 0x80000) to [0x00000, 0x70000)
+        # movsw from ds:si to es:di
+        cld                     # d = 0, si/di++
+        mov $0x0000, %ax
+move_repeat:
+        mov $0, %di
+        mov $0, %si
+        mov $0x8000, %cx        # 64Kb each loop
+        mov %ax, %es            
+        add $0x1000, %ax        # 巧妙, 刚好+0x1000, 还能判断
+        mov %ax, %ds            
+        mov $0x8000, %cx        # movsw 0x8000 word = 0x10000 bytes
+        rep movsw
+        cmp $0x8000, %ax        
+        jne move_repeat
+        # move finished
+# 5. Set up GDT, IDT, PIC
+        # GDT, IDT
+        mov $SETUPSEG, %ax 
+        mov %ax, %ds 
+        lidt idtr_info
+        lgdt gdtr_info
+        # PIC
+        mov $0x11, %al			# Init ICW1, 0x11 is init command
+        out %al, $0x20			# 0x20 is 8259A-1 Port
+        .word 0x00eb, 0x00eb	        # Time Delay jmp $+2, jmp $+2
+        out %al, $0xA0			# And init 8259A-2
+        .word 0x00eb, 0x00eb
+        mov $0x20, %al			# Send Hardware start intterupt number(0x20)
+        out %al, $0x21			# From 0x20 - 0x27
+        .word 0x00eb, 0x00eb
+        mov $0x28, %al
+        out %al, $0xA1			# From 0x28 - 0x2F
+        .word 0x00eb, 0x00eb
+        mov $0x04, %al			# 8259A-1 Set to Master
+        out %al, $0x21
+        .word 0x00eb, 0x00eb
+        mov $0x02, %al			# 8259A-2 Set to Slave
+        out %al, $0xA1
+        .word 0x00eb, 0x00eb
+        mov $0x01, %al			# 8086 Mode
+        out %al, $0x21
+        .word 0x00eb, 0x00eb
+        out %al, $0xA1
+        .word 0x00eb, 0x00eb
+        mov $0xFF, %al
+        out %al, $0x21			# Mask all the interrupts now
+        .word 0x00eb, 0x00eb
+        out %al, $0xA1			
+# 6 Enable Protected Mode
+	mov %cr0, %eax
+	bts $0, %eax		        # Turn on Protect Enable (PE) bit
+	mov %eax, %cr0
+
+        ljmp $0, $0                     # Jump to start point
 
 hltloop:
         hlt
@@ -127,7 +196,7 @@ print_hex:
         push %dx
         pushf
         mov %bx, %dx
-        mov $0x000b, %bx
+        mov $0x0007, %bx
 
         mov $0x0e, %ah
         mov $'0', %al
@@ -241,6 +310,27 @@ str_enableA20_failed:
 
 str_mb_memory:
         .ascii "Mb memory total.\n\r"
+str_enter_vga:
+        .ascii "Entering VGA display mode...\n\r"
+
+gdtr_info:
+        .word 0x800
+        .word 512+gdt_info, 0x9
+idtr_info:
+        .word 0
+        .word 0, 0
+gdt_info:
+        .word 0,0,0,0
+
+        .word 0x07ff
+        .word 0x0000
+        .word 0x9a00
+        .word 0x00c0
+
+        .word 0x07ff
+        .word 0x0000
+        .word 0x9200
+        .word 0x00c0
 
 # May be useful later
 
