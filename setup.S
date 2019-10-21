@@ -101,7 +101,6 @@ load_system_ok:
         mov $4, %cx
         call print_str
 
-
 hltloop:
         hlt
         jmp hltloop
@@ -111,8 +110,50 @@ load_system_failed:
         mov $str_failed_load_sys, %ax
         mov $51, %cx
         call print_str
-        
         jmp hltloop
+
+# print values in bx
+.type print_hex, @function
+print_hex:
+        push %ax
+        push %cx
+        push %dx
+        pushf
+        mov %bx, %dx
+        mov $0x000b, %bx
+
+        mov $0x0e, %ah
+        mov $'0', %al
+        int $0x10
+        mov $'x', %al
+        int $0x10
+
+        mov $12, %cl
+print_each_digit:
+        mov %dx, %ax
+        shr %cl, %ax
+        and $0x0f, %al
+        cmp $9, %al
+        jg hex_letter
+        add $'0', %al
+        jmp print_a_digit
+hex_letter:
+        add $'a', %ax
+        sub $10, %ax
+print_a_digit:
+        mov $0x0e, %ah
+        int $0x10
+        cmp $0, %cl
+        je print_hex_end
+        sub $4, %cl
+        jmp  print_each_digit
+
+print_hex_end:
+        popf
+        pop %dx
+        pop %cx
+        pop %ax
+        ret
 
 # print a string, ds:ax, length: cx
 .type print_str, @function
