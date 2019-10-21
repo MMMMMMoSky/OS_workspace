@@ -33,75 +33,34 @@ _start:
         mov $str_load_system, %ax
         mov $17, %cx
         call print_str
-        # Load C0-H0-S6 ~ C0-H0-S18 to [0x10000, 0x11a00)
+
+        # Load C0-H0-S6 ~ C19-H1-S18 to [0x10000, 0x69600)
         mov $0x0000, %dx                        # Drive 0 (A, floppy), Head 0
         mov $0x0006, %cx                        # C0S6 (sector indexed from 1)
-        mov $SYSINITSEG, %ax                    # load to ES:BX
+        mov $SYSINITSEG, %ax                    # (SYSINITSEG can be changed without modifying codes below)
+        mov %ax, %es                            # read to ES:BX
+        mov $0x0000, %bx                        # BX will always be 0
+load_system_loop:
+        mov $0x0201, %ax
+        int $0x13                               # read a sector
+        jc load_system_failed
+        cmp $1, %al 
+        jne load_system_failed
+        mov %es, %ax                            # address add 512B
+        add $0x20, %ax
         mov %ax, %es
-        mov $0x00, %bx
-        mov $13, %al                            # read 13 sectors
-        mov $02, %ah						
-        int $0x13				
-        jc load_system_failed
-        cmp $13, %al 
-        jne load_system_failed
-        # Load C0-H1-S1 ~ C0-H1-S18 to [0x11a00, 0x13e00)
-        mov $0x0100, %dx                        # Drive 0 (A, floppy), Head 1
-        mov $0x0006, %cx                        # C0S6 (sector indexed from 1)
-        mov $SYSINITSEG, %ax                    # load to ES:BX
-        add $0x1a0, %ax                         # have read 13 sectors (segment address += 0xd * 0x20 >> 0x04)
-        mov %ax, %es                            # calc addr for we can change SYSINITSEG without modifing codes here
-        mov $0x00, %bx
-        mov $18, %al                            # read 18 sectors
-        mov $02, %ah						
-        int $0x13				
-        jc load_system_failed
-        cmp $18, %al 
-        jne load_system_failed
-        # Load C1 ~ C20, totally 20 cylinders (360kb)
-        mov $SYSINITSEG, %ax
-        add $0x3e0, %ax                         # we have read 31 sectors
-        push %ax                                # start address
-        push $0x0101                            # cylinder and sector
-        push $0x0000                            # head and drive
-load_c1_c20:
-        pop %dx
-        pop %cx
-        pop %es
-        cmp $21, %ch
-        je load_system_ok
-        mov $0x0212, %ax
-        int $0x13				
+        add $1, %cl                             # sector add 1
+        cmp $19, %cl
+        jne load_system_loop
+        mov $1, %cl
+        add $1, %dh                             # head add 1
+        cmp $2, %dh
+        jne load_system_loop
+        mov $0, %dh 
+        add $1, %ch                             # cylinder add 1
+        cmp $20, %ch
+        jne load_system_loop
 
-        # DEBUG: print registers
-        push %bx
-        call print_endl
-        and $0x00ff, %ax
-        mov %ax, %bx
-        call print_hex
-        mov %cx, %bx
-        call print_hex
-        mov %dx, %bx
-        call print_hex
-        mov %es, %bx
-        call print_hex
-        pop %bx
-
-        jc load_system_failed
-        cmp $18, %al 
-        jne load_system_failed
-        mov %es, %ax                            # address add 18 * 512 >> 4 = 0x240
-        add $0x240, %ax
-        push %ax
-        mov %dx, %ax
-        and $0x0100, %ax
-        add %ax, %cx                            # cylinder add 1 when head is 1
-        push %cx
-        xor $0x0100, %dx                        # head should reverse
-        push %dx
-        jmp load_c1_c20
-
-load_system_ok:
         # Print string: load ok
         mov $str_ok, %ax
         mov $4, %cx
