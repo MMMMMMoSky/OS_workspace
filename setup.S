@@ -39,8 +39,8 @@ print_str:
         mov $0x000b, %bx
         int $0x10
 
-        push %es
-        push %bp
+        pop %es
+        pop %bp
         ret
 
 str_exec_setup:
