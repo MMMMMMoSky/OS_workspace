@@ -167,7 +167,13 @@ move_repeat:
 	bts $0, %eax		        # Turn on Protect Enable (PE) bit
 	mov %eax, %cr0
 
-        ljmp $0, $0                     # Jump to start point
+        .equ sel_cs0, 0x0008 
+        mov $0x10, %ax 
+        mov %ax, %ds
+        mov %ax, %es
+        mov %ax, %fs
+        mov %ax, %gs
+        ljmp $sel_cs0, $0               # Jump to start point
 
 hltloop:
         hlt
@@ -321,26 +327,18 @@ idtr_info:
         .word 0, 0
 gdt_info:
         .word 0,0,0,0
-
-        .word 0x07ff
-        .word 0x0000
+        # Code Segment Size 8MB BaseAddr: 0x0000:0x0000
+        .word 0x07ff    # limit 0-2047
+        .word 0x0000    # base addr
         .word 0x9a00
         .word 0x00c0
-
+        # Data Segment
         .word 0x07ff
         .word 0x0000
         .word 0x9200
         .word 0x00c0
 
 # May be useful later
-
-# # VGA Display Mode 
-# 		mov $0x12, %ah 
-# 		mov $0x10, %bl 
-# 		int $0x10 
-# 		mov %ax, %ds:8
-# 		mov %bx, %ds:10
-# 		mov %cx, %ds:12
 
 # # Harddisk Parameter Table
 # 		mov $0x0000, %ax
