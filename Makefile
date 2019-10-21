@@ -32,4 +32,4 @@ Image: bootsect setup sys_head
 	@echo "Image built done"
 
 clean:
-	@rm -f *.o bootsect setup Image
+	@rm -f *.o bootsect setup Image sys_head
