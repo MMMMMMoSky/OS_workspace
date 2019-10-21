@@ -3,20 +3,36 @@
 
 .equ SETUPSEG, 0x0800                       # must be the same as bootsect.S
 
-        # Print string: Executing setup program
-        mov $0x03, %ah
-        int $0x10
-        mov $SETUPSEG, %ax
-        mov %ax, %es
-        mov $str_exec_setup, %bp
-        mov $0x1301, %ax
-        mov $0x000b, %bx
-        mov $26, %cx                        # length of string
-        int $0x10
+        # Set stack pointer 0x0900:0xff
+        mov $0x0900, %ax
+        mov %ax, %ss
+        mov $0xff, %ax 
+        mov %ax, %sp 
+
+        mov $SETUPSEG, %ax 
+        mov $str_exec_setup, %bx
+        mov $28, %cx                        # length of string
+        call print_str
 
 hltloop:
         hlt
         jmp hltloop
+
+# print a string, ax:bx, length: cx
+.type print_str, @function
+print_str:
+        push %ax
+        push %bx
+        push %cx 
+        mov $0x03, %ah
+        int $0x10
+        pop %cx
+        pop %bp
+        pop %es
+        mov $0x1301, %ax
+        mov $0x000b, %bx
+        int $0x10
+        ret
 
 str_exec_setup:
         .ascii "Executing setup program...\n\r"
