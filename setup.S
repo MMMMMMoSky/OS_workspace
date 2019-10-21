@@ -1,10 +1,10 @@
 .code16
 .text 
 
-.equ SETUPSEG, 0x0800                       # must be the same as bootsect.S
+.equ SETUPSEG, 0x8000                       # must be the same as bootsect.S
 
-        # Set stack pointer 0x0900:0xff
-        mov $0x0900, %ax
+        # Set stack pointer 0x8900:0xff
+        mov $0x8900, %ax
         mov %ax, %ss
         mov $0xff, %ax 
         mov %ax, %sp 
