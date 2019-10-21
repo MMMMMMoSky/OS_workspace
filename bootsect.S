@@ -17,7 +17,7 @@ _start:
         mov %ax, %es
         mov $str_loading_setup, %bp
         mov $0x1301, %ax
-        mov $0x000b, %bx
+        mov $0x0007, %bx
         mov $24, %cx						# length of string
         int $0x10
 load_setup:
@@ -48,7 +48,7 @@ setup_load_ok:
         mov %ax, %es
         mov $str_ok, %bp
         mov $0x1301, %ax
-        mov $0x000b, %bx
+        mov $0x0007, %bx
         mov $4, %cx						# length of string
         int $0x10
 
