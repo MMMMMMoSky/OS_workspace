@@ -4,6 +4,8 @@
 .equ SETUPSEG, 0x8000                       # must be the same as bootsect.S
 .equ SYSINITSEG, 0x1000                     # the begining position of system
 .equ SYSSIZE, 0x59600                       # C0-H0-S6 ~ C19-H1-S18, 357kb
+.equ GDT_SEG_ADDR, 0x5970                   # GDT: 0x59700, can change without modifying code in setting gdt
+.equ GDTR_LIMIT, 0x0f00                     # GDTR 16bit limit
 
 _start:
         # Set stack pointer 0x8900:0xff
@@ -105,10 +107,6 @@ load_system_loop:
         mov $30, %cx
         call print_str
 
-        # mov protected_flag, %bx 
-        # call print_hex
-        # jmp hltloop
-
         # VGA Mode
         mov $0x0012, %ax
         int $0x10
@@ -134,61 +132,44 @@ move_repeat:
         jne move_repeat
         # move finished
 
-        # mov $0x0000, %ax 
-        # mov %ax, %ds 
-        # ljmp $0x0000, $0
-
-# 5. Set up GDT, IDT, PIC
-        # GDT, IDT
-        mov $SETUPSEG, %ax              # bochs instruction address: 0x800d3
+# 5. Set up GDT
+        # bochs instruction address: 0x800d3
+        mov $GDT_SEG_ADDR, %ax              
         mov %ax, %ds 
-        lidt idtr_info
-        lgdt gdtr_info
-        # PIC
-        # mov $0x11, %al			# Init ICW1, 0x11 is init command
-        # out %al, $0x20			# 0x20 is 8259A-1 Port
-        # .word 0x00eb, 0x00eb	        # Time Delay jmp $+2, jmp $+2
-        # out %al, $0xA0			# And init 8259A-2
-        # .word 0x00eb, 0x00eb
-        # mov $0x20, %al			# Send Hardware start intterupt number(0x20)
-        # out %al, $0x21			# From 0x20 - 0x27
-        # .word 0x00eb, 0x00eb
-        # mov $0x28, %al
-        # out %al, $0xA1			# From 0x28 - 0x2F
-        # .word 0x00eb, 0x00eb
-        # mov $0x04, %al			# 8259A-1 Set to Master
-        # out %al, $0x21
-        # .word 0x00eb, 0x00eb
-        # mov $0x02, %al			# 8259A-2 Set to Slave
-        # out %al, $0xA1
-        # .word 0x00eb, 0x00eb
-        # mov $0x01, %al			# 8086 Mode
-        # out %al, $0x21
-        # .word 0x00eb, 0x00eb
-        # out %al, $0xA1
-        # .word 0x00eb, 0x00eb
-        # mov $0xFF, %al
-        # out %al, $0x21			# Mask all the interrupts now
-        # .word 0x00eb, 0x00eb
-        # out %al, $0xA1			
-# 6 Enable Protected Mode
-	# mov %cr0, %eax
-	# bts $0, %eax		        # Turn on Protect Enable (PE) bit
-	# mov %eax, %cr0
+        mov $0x0000, %eax
 
-        # .equ sel_cs0, 0x0008 
-        # mov $0x10, %ax 
-        # mov %ax, %ds
-        # mov %ax, %es
-        # mov %ax, %fs
-        # mov %ax, %gs
-        # ljmp $sel_cs0, $0               # Jump to start point
-        ljmp $0x00, $0
+        movl $0x00000000, (%eax)                # item0: unuse
+        movl $0x00000000, 4(%eax)
+
+        movl $0x000007ff, 8(%eax)               # item1: code seg at 0x00, 8Mb
+        movl $0x00c09a00, 12(%eax)
+
+        movl $0x000007ff, 16(%eax)              # item2: data seg at 0x00
+        movl $0x00c09200, 20(%eax)
+
+        mov $GDT_SEG_ADDR, %ebx                 # 暂时使用后面的一点空间, 仅仅为了把值加载到 GDTR 中
+        movw $GDTR_LIMIT, 24(%eax)              # 16 bit limit
+        shl $4, %ebx
+        movl %ebx, 26(%eax)                     # GDT address
+        lgdt 24(%eax)
+
+# 6 Enable Protected Mode
+	mov %cr0, %eax
+	bts $0, %eax		        # Turn on Protect Enable (PE) bit
+	mov %eax, %cr0
+
+        .equ sel_cs0, 0x0008 
+        mov $0x10, %ax 
+        mov %ax, %ds
+        mov %ax, %es
+        mov %ax, %fs
+        mov %ax, %gs
+        ljmp $sel_cs0, $0               # Jump to start point
 
 hltloop:
         hlt
         jmp hltloop
-
+        
 enable_a20_failed:
         # Print string: enable a20 failed
         mov $str_enableA20_failed, %ax
@@ -274,7 +255,6 @@ print_space:
         pop %ax
         ret
 
-
 # print a string, ds:ax, length: cx
 .type print_str, @function
 print_str:
@@ -326,27 +306,10 @@ str_enableA20_failed:
 
 str_mb_memory:
         .ascii "Mb memory total.\n\r"
+
 str_enter_vga:
         .ascii "Entering VGA display mode...\n\r"
 
-gdtr_info:
-        .word 0x800
-        .word 512+gdt_info, 0x9
-idtr_info:
-        .word 0
-        .word 0, 0
-gdt_info:
-        .word 0,0,0,0
-        # Code Segment Size 8MB BaseAddr: 0x0000:0x0000
-        .word 0x07ff    # limit 0-2047
-        .word 0x0000    # base addr
-        .word 0x9a00
-        .word 0x00c0
-        # Data Segment
-        .word 0x07ff
-        .word 0x0000
-        .word 0x9200
-        .word 0x00c0
 
 # May be useful later
 
