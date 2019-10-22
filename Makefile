@@ -1,3 +1,5 @@
+.PHONY=clean run all
+
 all: Image
 
 run: Image

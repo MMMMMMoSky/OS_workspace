@@ -105,6 +105,10 @@ load_system_loop:
         mov $30, %cx
         call print_str
 
+        # mov protected_flag, %bx 
+        # call print_hex
+        # jmp hltloop
+
         # VGA Mode
         mov $0x0012, %ax
         int $0x10
@@ -130,13 +134,13 @@ move_repeat:
         jne move_repeat
         # move finished
 
-        mov $0x0000, %ax 
-        mov %ax, %ds 
-        ljmp $0x0000, $0
+        # mov $0x0000, %ax 
+        # mov %ax, %ds 
+        # ljmp $0x0000, $0
 
 # 5. Set up GDT, IDT, PIC
         # GDT, IDT
-        mov $SETUPSEG, %ax 
+        mov $SETUPSEG, %ax              # bochs instruction address: 0x800d3
         mov %ax, %ds 
         lidt idtr_info
         lgdt gdtr_info
@@ -168,17 +172,18 @@ move_repeat:
         # .word 0x00eb, 0x00eb
         # out %al, $0xA1			
 # 6 Enable Protected Mode
-	mov %cr0, %eax
-	bts $0, %eax		        # Turn on Protect Enable (PE) bit
-	mov %eax, %cr0
+	# mov %cr0, %eax
+	# bts $0, %eax		        # Turn on Protect Enable (PE) bit
+	# mov %eax, %cr0
 
-        .equ sel_cs0, 0x0008 
-        mov $0x10, %ax 
-        mov %ax, %ds
-        mov %ax, %es
-        mov %ax, %fs
-        mov %ax, %gs
-        ljmp $sel_cs0, $0               # Jump to start point
+        # .equ sel_cs0, 0x0008 
+        # mov $0x10, %ax 
+        # mov %ax, %ds
+        # mov %ax, %es
+        # mov %ax, %fs
+        # mov %ax, %gs
+        # ljmp $sel_cs0, $0               # Jump to start point
+        ljmp $0x00, $0
 
 hltloop:
         hlt
