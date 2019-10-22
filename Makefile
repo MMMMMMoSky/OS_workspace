@@ -28,7 +28,7 @@ Image: bootsect setup sys_head
 	@dd if=bootsect of=Image bs=512 count=1
 	@dd if=setup of=Image bs=512 count=4 seek=1
 	# 暂时添加 sys_head, 至少不没地方跳
-	@dd if=sys_head of=Image bs=512 seek=5  
+	@dd if=sys_head of=Image bs=512 count=4 seek=5  
 	@echo "Image built done"
 
 clean:

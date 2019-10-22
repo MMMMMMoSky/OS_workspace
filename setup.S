@@ -129,6 +129,11 @@ move_repeat:
         cmp $0x8000, %ax        
         jne move_repeat
         # move finished
+
+        mov $0x0000, %ax 
+        mov %ax, %ds 
+        ljmp $0x0000, $0
+
 # 5. Set up GDT, IDT, PIC
         # GDT, IDT
         mov $SETUPSEG, %ax 
@@ -136,32 +141,32 @@ move_repeat:
         lidt idtr_info
         lgdt gdtr_info
         # PIC
-        mov $0x11, %al			# Init ICW1, 0x11 is init command
-        out %al, $0x20			# 0x20 is 8259A-1 Port
-        .word 0x00eb, 0x00eb	        # Time Delay jmp $+2, jmp $+2
-        out %al, $0xA0			# And init 8259A-2
-        .word 0x00eb, 0x00eb
-        mov $0x20, %al			# Send Hardware start intterupt number(0x20)
-        out %al, $0x21			# From 0x20 - 0x27
-        .word 0x00eb, 0x00eb
-        mov $0x28, %al
-        out %al, $0xA1			# From 0x28 - 0x2F
-        .word 0x00eb, 0x00eb
-        mov $0x04, %al			# 8259A-1 Set to Master
-        out %al, $0x21
-        .word 0x00eb, 0x00eb
-        mov $0x02, %al			# 8259A-2 Set to Slave
-        out %al, $0xA1
-        .word 0x00eb, 0x00eb
-        mov $0x01, %al			# 8086 Mode
-        out %al, $0x21
-        .word 0x00eb, 0x00eb
-        out %al, $0xA1
-        .word 0x00eb, 0x00eb
-        mov $0xFF, %al
-        out %al, $0x21			# Mask all the interrupts now
-        .word 0x00eb, 0x00eb
-        out %al, $0xA1			
+        # mov $0x11, %al			# Init ICW1, 0x11 is init command
+        # out %al, $0x20			# 0x20 is 8259A-1 Port
+        # .word 0x00eb, 0x00eb	        # Time Delay jmp $+2, jmp $+2
+        # out %al, $0xA0			# And init 8259A-2
+        # .word 0x00eb, 0x00eb
+        # mov $0x20, %al			# Send Hardware start intterupt number(0x20)
+        # out %al, $0x21			# From 0x20 - 0x27
+        # .word 0x00eb, 0x00eb
+        # mov $0x28, %al
+        # out %al, $0xA1			# From 0x28 - 0x2F
+        # .word 0x00eb, 0x00eb
+        # mov $0x04, %al			# 8259A-1 Set to Master
+        # out %al, $0x21
+        # .word 0x00eb, 0x00eb
+        # mov $0x02, %al			# 8259A-2 Set to Slave
+        # out %al, $0xA1
+        # .word 0x00eb, 0x00eb
+        # mov $0x01, %al			# 8086 Mode
+        # out %al, $0x21
+        # .word 0x00eb, 0x00eb
+        # out %al, $0xA1
+        # .word 0x00eb, 0x00eb
+        # mov $0xFF, %al
+        # out %al, $0x21			# Mask all the interrupts now
+        # .word 0x00eb, 0x00eb
+        # out %al, $0xA1			
 # 6 Enable Protected Mode
 	mov %cr0, %eax
 	bts $0, %eax		        # Turn on Protect Enable (PE) bit
