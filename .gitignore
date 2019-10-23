@@ -1,4 +1,5 @@
 *.o
+os_main.s
 bootsect
 setup
 Image
