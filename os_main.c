@@ -1,9 +1,13 @@
 #include "func_def.h"
 
+//用于测试的全局变量
+int  x = 200;
+
 void main(void)
 {
+	box_fill(0, 0, 100, 100, x);
     for (int i = 0; i < 256; i++) {
-        box_fill(0, 0, 100, 100, i);
+        //box_fill(0, 0, 100, 100, i);
         nop(10000000);
         // asm_hlt();
     }

@@ -32,7 +32,8 @@ os_main.s: os_main.c
 
 system: sys_head.o os_main.o
 	@ld -T ld_script.ld sys_head.o os_main.o -o system
-	@objcopy -O binary -j .text system
+	#@objcopy -O binary -j .text system 改为下面的,就可以用全局变量了
+	@objcopy -O binary -R .note -R .comment system 
 
 
 Image: bootsect setup system
