@@ -102,13 +102,13 @@ load_system_loop:
         mov $18, %cx
         call print_str
 
-# 3. VGA 0x12 640x480x16
+# 3. VGA 0x13 320x200x8
         mov $str_enter_vga, %ax
         mov $30, %cx
         call print_str
 
         # VGA Mode
-        mov $0x0012, %ax
+        mov $0x0013, %ax
         int $0x10
 
         # FIXME 可能还有一些参数没有保存
