@@ -1,3 +1,17 @@
+#include "func_def.h"
+
+void main(void)
+{
+    for (int i = 0; i < 256; i++) {
+        box_fill(0, 0, 100, 100, i);
+        nop(10000000);
+        // asm_hlt();
+    }
+    loop:
+    asm_hlt();
+    goto loop;
+}
+
 void nop(int repeat)
 {
     for (int k = 0; k < repeat; k++) {
@@ -14,11 +28,4 @@ void box_fill(int bx, int by, int sx, int sy, char c)
             *((char*)0xa0000 + x * 320 + y) = c;
         }
     }
-}
-
-void main(void)
-{
-    box_fill(0, 0, 100, 100, 0x03);
-    loop:
-    goto loop;
 }
