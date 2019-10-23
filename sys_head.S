@@ -1,5 +1,5 @@
 .code32
 
-hltloop:
-        hlt 
-        jmp hltloop
+.global main            # why is not _main ??
+
+        call main

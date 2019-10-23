@@ -1,4 +1,6 @@
 .PHONY=clean run all
+CC=gcc 
+CFLAGS=-m32 -fomit-frame-pointer -fno-pie
 
 all: Image
 
@@ -22,16 +24,22 @@ setup: setup.o ld_script.ld
 sys_head.o: sys_head.S 
 	@as --32 sys_head.S -o sys_head.o
 
-sys_head: sys_head.o ld_script.ld
-	@ld -T ld_script.ld sys_head.o -o sys_head
-	@objcopy -O binary -j .text sys_head
+os_main.o: os_main.c
+	@$(CC) -c os_main.c -o os_main.o $(CFLAGS)
 
-Image: bootsect setup sys_head
+os_main.s: os_main.c
+	@$(CC) -S os_main.c -o os_main.s $(CFLAGS)
+
+system: sys_head.o os_main.o
+	@ld -T ld_script.ld sys_head.o os_main.o -o system
+	@objcopy -O binary -j .text system
+
+
+Image: bootsect setup system
 	@dd if=bootsect of=Image bs=512 count=1
 	@dd if=setup of=Image bs=512 count=4 seek=1
-	# 暂时添加 sys_head, 至少不没地方跳
-	@dd if=sys_head of=Image bs=512 count=4 seek=5  
+	@dd if=system of=Image bs=512 count=4 seek=5  
 	@echo "Image built done"
 
 clean:
-	@rm -f *.o bootsect setup Image sys_head
+	@rm -f *.o bootsect setup Image sys_head os_main os_main.s system
