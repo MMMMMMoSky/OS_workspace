@@ -16,9 +16,23 @@ as 汇编器
 
 ## 文件列表
 
-- `bootsect.S` 启动区, 编译后被放在软盘的第一个扇区 (512 字节)
-- `ld_script.ld` 链接脚本, 用于去掉 elf 文件头
-- `setup.S` 初始化程序, 编译后被放在软盘的第二到第五扇区
+- **boot**:
+  - `bootsect.S`: 启动区, 编译后被放在软盘的第一个扇区 (512 字节), 加载初始化程序并跳转
+  - `setup.S`: 初始化程序, 编译后被放在软盘的第二到第五扇区, 完成一些初始化工作然后跳转到操作系统
+- **system**:
+  - `sys_head.S`: 调用 `main()`, 确保 C 代码从 `main()` 开始执行, 并为 C 语言提供一些函数
+  - **headers**:
+    - `macro_def.h`: 宏定义, 涉及到一些参数
+    - `struct_def.h`: 结构体的定义
+    - `func_def.h`: 各种函数的声明
+  - **C**:
+    - `os_main.c`: `main()` 函数的定义, 操作系统的起点
+    - `console_io.c`: 包含控制台输出的相关函数的实现
+    - `hardware_init.c`: 硬件初始化函数的实现
+    - `men_manage.c`: 内存管理相关函数的实现
+    - `text_video.c`: VGA 0x03 号字符模式下画面控制相关函数的实现
+- 其他:
+  - `ld_script.ld` 链接脚本, 用于去掉 elf 文件头
 
 ## `bootsect.S` 启动区
 
@@ -40,24 +54,7 @@ as 汇编器
 
 生成 `system` 就是操作系统, 会被加载到 `0x0000`.
 
-目前 `system` 由 `sys_head.S` 和 `os_main.c` 拼接而成
-
-### `sys_head.S` 操作系统头
-
-操作系统最开始的一段代码, 目前仅仅用于跳转到 `os_main.c` 中的 `main()` 函数.
-
-之后可以扩展, 添加一些函数, 或者执行一些初始化 (IDT, PIC等).
-
-已经添加的函数:
-    `asm_hlt` => `void asm_hlt()`: 执行 `hlt` 指令
-
-### `os_main.c` 
-
-`main()` 函数, C 语言的起点
-
-### `func_def.h`
-
-目前用到的函数的声明
+目前 `system` 由 `sys_head.S` 和 C 语言代码拼接而成.
 
 ## 备注
 
