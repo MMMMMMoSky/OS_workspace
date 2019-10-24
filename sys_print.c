@@ -1,16 +1,48 @@
 #include<func_def.h>
 
+//io out
 #define inb(port) ({\
 unsigned char _v; \
 __asm__ volatile("inb %%dx, %%al":"=a" (_v):"d" (port)); \
 _v; \
     })
-
 #define outb(port, value) \
     __asm__ ("outb %%al, %%dx"::"a" (value), "d" (port));
+
 #define VIDEO_MEM 0xB8000
 #define VIDEO_X_SZ 80
 #define VIDEO_Y_SZ 25
+
+//args macro for pringtf
+#ifndef _STDARG_H
+#define _STDARG_H
+
+typedef char *va_list;
+
+/* Amount of space required in an argument list for an arg of type TYPE.
+   TYPE may alternatively be an expression whose type is used.  */
+
+#define __va_rounded_size(TYPE)  \
+  (((sizeof (TYPE) + sizeof (int) - 1) / sizeof (int)) * sizeof (int))
+
+#ifndef __sparc__
+#define va_start(AP, LASTARG) 						\
+ (AP = ((char *) &(LASTARG) + __va_rounded_size (LASTARG)))
+#else
+#define va_start(AP, LASTARG) 						\
+ (__builtin_saveregs (),						\
+  AP = ((char *) &(LASTARG) + __va_rounded_size (LASTARG)))
+#endif
+
+//void va_end (va_list);		/* Defined in gnulib */
+//#define va_end(AP)
+
+#define va_arg(AP, TYPE)						\
+ (AP += __va_rounded_size (TYPE),					\
+  *((TYPE *) (AP - __va_rounded_size (TYPE))))
+
+#endif
+
 int video_x;
 int video_y;
 
@@ -121,4 +153,75 @@ void memcpy(char *dest, char *src, int count, int size) {
     return ;
 }
 
+void printf(char *fmt,...)
+{
+    va_list ap;
+    va_start(ap, fmt);
 
+    char c, *s;
+
+    while(*fmt) {
+        c = *fmt++;
+        if(c != '%') {
+            video_putchar(c);
+            continue;
+        }
+        c = *fmt++;
+        if(c == '\0')
+            break;
+        switch(c) {
+            case 'd':
+                printnum(va_arg(ap, int), 10, 1);
+                break;
+            case 'u':
+                printnum(va_arg(ap, int), 10, 0);
+                break;
+            case 'x':
+                printnum(va_arg(ap, int), 16, 0);
+                break;
+            case 's':
+                s = va_arg(ap, char*);
+                while(*s)
+                    video_putchar(*s++);
+                break;
+            case '%':
+                video_putchar('%');
+        }
+    }
+    return;
+}
+
+//在函数中用不了数组, 所以使用全局数组代替一下
+char printnum_buf[50]="";
+char printnum_digits[] = "0123456789ABCDEF";
+int cnt = 0;
+void printnum(int num, int base, int sign) {
+    int i;
+	//虽然可以申明全局变量,但是在外面赋值这个数组没有用,只好在函数内在赋值一次了...
+	for(i = 0;i<16;i++)
+	{
+		if(i < 10)
+			printnum_digits[i] = '0'+i;		
+		else
+			printnum_digits[i] = 'A'+i-10;
+	}
+    if(sign && num < 0) {       // Check for sign or unsign
+        video_putchar('-');
+        num = -num;
+    }
+
+    if(num == 0) {
+        video_putchar('0');
+        return ;
+    }
+
+    while(num) {
+        printnum_buf[cnt++] = printnum_digits[num % base];
+        num = num / base;
+    }
+
+    for(i = cnt - 1; i >=0; i--) {
+        video_putchar(printnum_buf[i]);
+    }
+    return ;
+}

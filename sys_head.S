@@ -5,7 +5,7 @@
 .global io_out8, io_out16, io_out32
 .global io_load_eflags, io_store_eflags
 .global io_store_idtr
- 
+
 
         call main       # jump to os_main.c main()
 

@@ -37,3 +37,14 @@ void io_out32(int port, int data);
 int io_load_eflags();
 void io_store_eflags(int eflags);
 void io_store_idtr(int limit, int addr);
+
+//implement in sys_print.c
+void video_putchar_at(char ch, int x, int y, char attr);
+void video_putchar(char ch);
+void update_cursor(int row, int col);
+void video_init();
+void video_clear();
+void roll_screen();
+void memcpy(char *dest, char *src, int count, int size);
+void printnum(int num, int base, int sign);
+void printf(char *fmt,...);
