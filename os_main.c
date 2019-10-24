@@ -1,35 +1,50 @@
 #include "func_def.h"
 
-//用于测试的全局变量
-int  x = 200;
-
-void main(void)
+void main()
 {
-	box_fill(0, 0, 100, 100, x);
-    for (int i = 0; i < 256; i++) {
-        //box_fill(0, 0, 100, 100, i);
-        nop(10000000);
-        // asm_hlt();
-    }
-    loop:
-    asm_hlt();
+    init_idt();
+    init_pic();
+    io_cli();
+loop:
+    __asm__("nop\n\t");
     goto loop;
 }
 
-void nop(int repeat)
+void init_pic()
 {
-    for (int k = 0; k < repeat; k++) {
-        __asm__("nop\n\t");
-    }
+    io_out8(PIC0_IMR, 0xff);
+    io_out8(PIC1_IMR, 0xff);
+
+    io_out8(PIC0_ICW1, 0x11);
+    io_out8(PIC0_ICW2, 0x20);
+    io_out8(PIC0_ICW3, 1 << 2);
+    io_out8(PIC0_ICW4, 0x01);
+
+    io_out8(PIC1_ICW1, 0x11);
+    io_out8(PIC1_ICW2, 0x28);
+    io_out8(PIC1_ICW3, 2);
+    io_out8(PIC1_ICW4, 0x01);
+
+    io_out8(PIC0_IMR, 0xfb);
+    io_out8(PIC1_IMR, 0xff);
+
+    return;
 }
 
-void box_fill(int bx, int by, int sx, int sy, char c)
+void set_idtdesc(struct idt_descriptor *id, int offset, int selector, int ar)
 {
-    for (int i = 0; i < sx; i++) {
-        for (int j = 0; j < sy; j++) {
-            int x = bx + i;
-            int y = by + j;
-            *((char*)0xa0000 + x * 320 + y) = c;
-        }
+    id->offset_low = offset & 0xffff;
+    id->selector = selector;
+    id->dw_count = (ar >> 8) & 0xff;
+    id->access_right = ar & 0xff;
+    id->offset_high = (offset >> 16) & 0xffff;
+}
+
+void init_idt()
+{
+    struct idt_descriptor *idt = (struct idt_descriptor *)0x0026f800;
+    for (int i = 0; i < 256; i++) {
+        set_idtdesc(idt + i, 0, 0, 0);
     }
+    io_store_idtr(0x7ff, 0x0026f800);
 }
