@@ -1,6 +1,7 @@
 .PHONY=clean run all
 CC=gcc 
 CFLAGS=-m32 -fomit-frame-pointer -fno-pie -fno-stack-protector
+LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null | head -n 1)
 
 all: Image
 
@@ -30,8 +31,12 @@ os_main.o: os_main.c
 os_main.s: os_main.c
 	@$(CC) -S os_main.c -o os_main.s $(CFLAGS)
 
-system: sys_head.o os_main.o
-	@ld -T ld_script.ld sys_head.o os_main.o -o system
+sys_print.o:sys_print.c
+	@$(CC) -c sys_print.c -o sys_print.o $(CFLAGS)
+
+system: sys_head.o os_main.o sys_print.o
+	@ld $(LDFLAGS) -r -N -o kernel sys_print.o os_main.o 
+	@ld -T ld_script.ld sys_head.o kernel -o system
 	#@objcopy -O binary -j .text system 改为下面的,就可以用全局变量了
 	@objcopy -O binary -R .note -R .comment system 
 
@@ -43,4 +48,4 @@ Image: bootsect setup system
 	@echo "Image built done"
 
 clean:
-	@rm -f *.o bootsect setup Image sys_head os_main os_main.s system
+	@rm -f *.o bootsect setup Image sys_head os_main os_main.s system kernel

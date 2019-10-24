@@ -5,6 +5,22 @@ void main()
     init_idt();
     init_pic();
     io_cli();
+	video_init();
+	
+	
+	printnum(1000,16,1);
+	printf("\nsadfasdf\n");
+	//测试输出函数	
+	//video_putchar('x');
+	video_putchar('z');
+	for(int i = 0;i<100;i++)
+	{
+		video_putchar('a');
+		video_putchar('b');
+		video_putchar('c');
+	}
+	
+
 loop:
     __asm__("nop\n\t");
     goto loop;
