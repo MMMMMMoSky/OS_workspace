@@ -36,21 +36,21 @@ io_in32:                # int io_in32(int port)
 .type io_out8, @function
 io_out8:                # int io_out8(int port,  data)
     mov 4(%esp), %edx   # port
-    mov 8(%eax), %eax   # data
+    mov 8(%esp), %eax   # data
     out %al, %dx
     ret 
 
 .type io_out16, @function
 io_out16:               # int io_out16(int port, int data)
     mov 4(%esp), %edx
-    mov 8(%eax), %eax
+    mov 8(%esp), %eax
     out %ax,%dx
     ret 
 
 .type io_out32, @function
 io_out32:               # int io_out32(int port, int data)
     mov 4(%esp), %edx
-    mov 8(%eax), %eax
+    mov 8(%esp), %eax
     out %eax, %dx
     ret 
 
