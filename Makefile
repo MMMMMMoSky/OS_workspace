@@ -1,6 +1,6 @@
 .PHONY=clean run all
 CC=gcc 
-CFLAGS=-m32 -fomit-frame-pointer -fno-pie
+CFLAGS=-m32 -fomit-frame-pointer -fno-pie -fno-stack-protector
 
 all: Image
 
