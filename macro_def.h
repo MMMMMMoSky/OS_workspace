@@ -8,6 +8,13 @@ typedef unsigned int uint;
 #define VIDEO_X_SZ 80
 #define VIDEO_Y_SZ 25
 
+// GDT set up in setup.S 
+#define GDT_ADDR 0x59700            // GDT_SEG_ADDR in setup.S
+#define GDTR_LIMIT 0x6000           // GDTR_LIMIT in setup.S, 3072 Descriptor at most
+
+#define IDT_ADDR 0x60000
+#define IDT_INTR_LIMIT 256          // number of interrupts at most
+
 // used when setting PIC
 #define PIC0_ICW1       0x0020
 #define PIC0_OCW2       0x0020

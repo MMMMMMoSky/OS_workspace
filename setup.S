@@ -5,7 +5,7 @@
 .equ SYSINITSEG, 0x1000                     # the begining position of system
 .equ SYSSIZE, 0x59600                       # C0-H0-S6 ~ C19-H1-S18, 357kb
 .equ GDT_SEG_ADDR, 0x5970                   # GDT: 0x59700, can change without modifying code in setting gdt
-.equ GDTR_LIMIT, 0x0f00                     # GDTR 16bit limit
+.equ GDTR_LIMIT, 0x6000                     # GDTR 16bit limit, 3072 Descriptors at most
 
 _start:
         # Set stack pointer 0x8900:0xff
@@ -153,9 +153,9 @@ move_repeat:
         movl %ebx, 26(%eax)                     # GDT address
         lgdt 24(%eax)
 
-        mov $0x6400, %eax                       # set stack to 0x64000
+        mov $0x6100, %eax                       # set stack to 0x61000
         mov %eax, %ss                           # I don't know why I can not set %ss after turning on PE bit
-        mov $0xbfff, %eax                       # [0x64000, 0x6ffff]: system stack
+        mov $0xefff, %eax                       # [0x61000, 0x6ffff]: system stack
         mov %eax, %esp                          # %ss do not use GDT ?
 
 # 6 Enable Protected Mode

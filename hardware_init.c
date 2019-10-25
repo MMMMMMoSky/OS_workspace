@@ -27,11 +27,11 @@ void init_pic()
 
 void init_idt()
 {
-    struct idt_descriptor *idt = (struct idt_descriptor *)0x0026f800;
-    for (int i = 0; i < 256; i++) {
-        set_idtdesc(idt + i, &inthandler21, 0x08, 0x008e);
+    struct idt_descriptor *idt = (struct idt_descriptor *)IDT_ADDR;
+    for (int i = 0; i < IDT_INTR_LIMIT; i++) {
+        set_idtdesc(idt + i, (int)&inthandler21, 0x08, 0x008e);
     }
-    io_store_idtr(0x7ff, 0x0026f800);
+    io_store_idtr(0x7ff, IDT_ADDR);
 }
 
 void set_idtdesc(struct idt_descriptor *id, int offset, int selector, int ar)
@@ -41,4 +41,13 @@ void set_idtdesc(struct idt_descriptor *id, int offset, int selector, int ar)
     id->dw_count = (ar >> 8) & 0xff;
     id->access_right = ar & 0xff;
     id->offset_high = (offset >> 16) & 0xffff;
+}
+
+//暂时用于键盘中断调用函数
+void print(void)
+{	
+	int data;
+	io_out8(PIC0_OCW2, 0x61);
+	data = io_in8(0x0060);
+	v_putchar('a');
 }
