@@ -2,6 +2,8 @@
 #define MACRO_DEF_H
 
 typedef unsigned int uint;
+typedef long long int64;
+typedef unsigned long long uint64;
 
 // VGA 80x25x16 text mode
 #define VIDEO_MEM 0xB8000
