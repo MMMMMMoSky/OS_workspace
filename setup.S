@@ -141,11 +141,11 @@ move_repeat:
         movl $0x00000000, (%eax)                # item0: unuse
         movl $0x00000000, 4(%eax)
 
-        movl $0x000007ff, 8(%eax)               # item1: code seg at 0x00, 8Mb
-        movl $0x00c09a00, 12(%eax)
+        movl $0x0000ffff, 8(%eax)               # item1: code seg at 0x00, 8Mb
+        movl $0x00cf9a00, 12(%eax)
 
-        movl $0x000007ff, 16(%eax)              # item2: data seg at 0x00, 8Mb
-        movl $0x00c09200, 20(%eax)
+        movl $0x0000ffff, 16(%eax)              # item2: data seg at 0x00, 8Mb
+        movl $0x00cf9200, 20(%eax)
 
         mov $GDT_SEG_ADDR, %ebx                 # 暂时使用后面的一点空间, 仅仅为了把值加载到 GDTR 中
         movw $GDTR_LIMIT, 24(%eax)              # 16 bit limit
