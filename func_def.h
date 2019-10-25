@@ -32,8 +32,14 @@ void v_putchar(char ch);
 void v_putchar_at(char ch, uint x, uint y, uint color);
 
 // implement in console_io.c
-void printf(const char *fmt,...);
-void printnum(int num, int base, int sign);
+void printc(char c);                    // print char
+void printi(int i);                     // print integer
+void printui(uint ui);                  // print unsigned integer
+void printhex(uint ui);                 // print hex of unsigned integer
+void prints(const char * s);            // print string
+void printd(double d);                  // print double
+// void printf(const char *fmt,...);
+// void printnum(int num, int base, int sign);
 
 // implement in mem_manage.c
 void memcpy(char *dst, const char *src, int count, int size);

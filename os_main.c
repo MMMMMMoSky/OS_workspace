@@ -7,9 +7,13 @@ void main()
     io_cli();
     init_video();
 
-    int a = 0x1234;
-    printf("%d %d\n", a, a);
-    printf("Hello world\n");
+    // test console_io
+    uint a = 0x1234;
+    printui(a);
+    printc('\n');
+    printi(-a);
+    printc('\n');
+    printhex(a);
 
 loop:
     __asm__("nop\n\t");
