@@ -29,7 +29,7 @@ void init_idt()
 {
     struct idt_descriptor *idt = (struct idt_descriptor *)0x0026f800;
     for (int i = 0; i < 256; i++) {
-        set_idtdesc(idt + i, 0, 0, 0);
+        set_idtdesc(idt + i, &inthandler21, 0x08, 0x008e);
     }
     io_store_idtr(0x7ff, 0x0026f800);
 }

@@ -1,14 +1,16 @@
 .code32
 
-.global main            # why is not _main ??
+.global main          # why is not _main ??
 .global io_in8, io_in16, io_in32
 .global io_out8, io_out16, io_out32
 .global io_load_eflags, io_store_eflags
-.global io_store_idtr
+.global io_store_idtr, inthandler21
+.extern print
 
-
-        call main       # jump to os_main.c main()
-
+	call print
+	call main       # jump to os_main.c main()
+loop:
+	jmp loop
 
 
 # some functions called in C language
@@ -73,3 +75,25 @@ io_store_idtr:          # void io_store_idtr(int limit, int addr);
     mov %ax, 6(%esp)	
     lidt 6(%esp)
     ret
+
+inthandler21:
+	pushl %eax
+	pushl %ecx
+	pushl %edx
+	push %ds
+	push %es
+	push %fs
+	
+	mov $0x10, %eax
+	mov %eax, %ds
+	mov %eax, %es
+	mov %eax, %fs
+	call print
+	
+	pop %fs
+	pop %es
+	pop %ds
+	popl %edx
+	popl %ecx
+	popl %eax
+	iret 

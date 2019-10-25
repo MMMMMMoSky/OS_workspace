@@ -15,7 +15,7 @@ void io_out32(int port, int data);
 int io_load_eflags();
 void io_store_eflags(int eflags);
 void io_store_idtr(int limit, int addr);
-
+void inthandler21(void);
 
 // implemented in hardware_init.c
 void init_video();
