@@ -18,6 +18,12 @@ void printi(int i)
 void printui(uint ui)
 {
     static char digits[20];
+
+    if (ui == 0) {
+        v_putchar('0');
+        return ;
+    }
+
     digits[19] = 0;
     uint idx = 19, tmp;
     while (ui) {
@@ -31,6 +37,12 @@ void printhex(uint ui)
 {
     static char digits[20];
     // static char digit2char[] = "0123456789ABCDEF";  // FIXME: do not work ?
+
+    if (ui == 0) {
+        prints("0x0");
+        return ;
+    }
+
     digits[19] = 0;
     uint idx = 19;
     while (ui) {
