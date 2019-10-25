@@ -144,7 +144,7 @@ move_repeat:
         movl $0x000007ff, 8(%eax)               # item1: code seg at 0x00, 8Mb
         movl $0x00c09a00, 12(%eax)
 
-        movl $0x000007ff, 16(%eax)              # item2: data seg at 0x00
+        movl $0x000007ff, 16(%eax)              # item2: data seg at 0x00, 8Mb
         movl $0x00c09200, 20(%eax)
 
         mov $GDT_SEG_ADDR, %ebx                 # 暂时使用后面的一点空间, 仅仅为了把值加载到 GDTR 中
@@ -152,6 +152,11 @@ move_repeat:
         shl $4, %ebx
         movl %ebx, 26(%eax)                     # GDT address
         lgdt 24(%eax)
+
+        mov $0x6400, %eax                       # set stack to 0x64000
+        mov %eax, %ss                           # I don't know why I can not set %ss after turning on PE bit
+        mov $0xbfff, %eax                       # [0x64000, 0x6ffff]: system stack
+        mov %eax, %esp                          # %ss do not use GDT ?
 
 # 6 Enable Protected Mode
 	mov %cr0, %eax
