@@ -7,7 +7,6 @@
 .global io_store_idtr, inthandler21
 .extern print
 
-	call print
 	call main       # jump to os_main.c main()
 loop:
 	jmp loop
