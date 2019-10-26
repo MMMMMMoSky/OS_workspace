@@ -47,7 +47,7 @@ void printhex(uint ui)
     uint idx = 19;
     while (ui) {
         char c = ui & 0xf;
-        digits[--idx] = c + (c <= '9' ? '0' : 'A' - 10);
+        digits[--idx] = c + (c < 10 ? '0' : 'A' - 10);
         ui >>= 4ull;
     }
     prints("0x");
