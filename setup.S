@@ -138,25 +138,23 @@ move_repeat:
         mov %ax, %ds 
         mov $0x0000, %eax
 
-        movl $0x00000000, (%eax)                # item0: unuse
+        movl $0x00000000, (%eax)                # item0: unused
         movl $0x00000000, 4(%eax)
 
-        movl $0x0000ffff, 8(%eax)               # item1: code seg at 0x00, 8Mb
+        movl $0x0000ffff, 8(%eax)               # item1: code seg at 0x00, inf size
         movl $0x00cf9a00, 12(%eax)
 
-        movl $0x0000ffff, 16(%eax)              # item2: data seg at 0x00, 8Mb
+        movl $0x0000ffff, 16(%eax)              # item2: data seg at 0x00, inf size
         movl $0x00cf9200, 20(%eax)
 
-        mov $GDT_SEG_ADDR, %ebx                 # 暂时使用后面的一点空间, 仅仅为了把值加载到 GDTR 中
-        movw $GDTR_LIMIT, 24(%eax)              # 16 bit limit
-        shl $4, %ebx
-        movl %ebx, 26(%eax)                     # GDT address
-        lgdt 24(%eax)
+        movl $0x0000000f, 24(%eax)              # item3: data seg at 0x61000, 60Kb
+        movl $0x00c09607, 28(%eax)              # system stack [0x61000, 0x70000)
 
-        mov $0x6100, %eax                       # set stack to 0x61000
-        mov %eax, %ss                           # I don't know why I can not set %ss after turning on PE bit
-        mov $0xefff, %eax                       # [0x61000, 0x6ffff]: system stack
-        mov %eax, %esp                          # %ss do not use GDT ?
+        mov $GDT_SEG_ADDR, %ebx                 # 暂时使用后面的一点空间, 仅仅为了把值加载到 GDTR 中
+        movw $GDTR_LIMIT, 32(%eax)              # 16 bit limit
+        shl $4, %ebx
+        movl %ebx, 34(%eax)                     # GDT address
+        lgdt 32(%eax)
 
 # 6 Enable Protected Mode
 	mov %cr0, %eax
@@ -169,6 +167,10 @@ move_repeat:
         mov %ax, %es
         mov %ax, %fs
         mov %ax, %gs
+        mov $0, %eax                            # set stack to [0x61000, 0x70000)
+        mov %eax, %esp
+        mov $0x18, %ax                          # select 3rd item of GDT
+        mov %ax, %ss
         ljmp $sel_cs0, $0               # Jump to start point
 
 hltloop:
