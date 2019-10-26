@@ -36,7 +36,7 @@ void printui(uint ui)
 void printhex(uint ui)
 {
     static char digits[20];
-    // static char digit2char[] = "0123456789ABCDEF";  // FIXME: do not work ?
+    static const char digit2char[] = "0123456789ABCDEF";
 
     if (ui == 0) {
         prints("0x0");
@@ -46,8 +46,7 @@ void printhex(uint ui)
     digits[19] = 0;
     uint idx = 19;
     while (ui) {
-        char c = ui & 0xf;
-        digits[--idx] = c + (c < 10 ? '0' : 'A' - 10);
+        digits[--idx] = digit2char[ui & 0xf];
         ui >>= 4ull;
     }
     prints("0x");
