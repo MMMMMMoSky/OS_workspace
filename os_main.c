@@ -18,6 +18,9 @@ void main()
     printi(-a);
     printc('\n');
     printhex(a);
+    char s[15] = "Hello world";
+    printc('\n');
+    prints(s);
 
 loop:
     __asm__("nop\n\t");

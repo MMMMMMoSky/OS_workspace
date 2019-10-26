@@ -147,8 +147,8 @@ move_repeat:
         movl $0x0000ffff, 16(%eax)              # item2: data seg at 0x00, inf size
         movl $0x00cf9200, 20(%eax)
 
-        movl $0x0000000f, 24(%eax)              # item3: data seg at 0x61000, 60Kb
-        movl $0x00c09607, 28(%eax)              # system stack [0x61000, 0x70000)
+        # movl $0x0000000f, 24(%eax)              # item3: data seg at 0x61000, 60Kb
+        # movl $0x00c09607, 28(%eax)              # system stack [0x61000, 0x70000)
 
         mov $GDT_SEG_ADDR, %ebx                 # 暂时使用后面的一点空间, 仅仅为了把值加载到 GDTR 中
         movw $GDTR_LIMIT, 32(%eax)              # 16 bit limit
@@ -167,9 +167,9 @@ move_repeat:
         mov %ax, %es
         mov %ax, %fs
         mov %ax, %gs
-        mov $0, %eax                            # set stack to [0x61000, 0x70000)
+        mov $0xa0000, %eax              # set stack to 0xa0000)
         mov %eax, %esp
-        mov $0x18, %ax                          # select 3rd item of GDT
+        mov $0x10, %ax                          
         mov %ax, %ss
         ljmp $sel_cs0, $0               # Jump to start point
 
