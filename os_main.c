@@ -6,21 +6,17 @@ void main()
 	init_idt();
 	init_pic();
 	io_cli();
-	io_out8(PIC0_IMR, 0xfd);
+	io_out8(PIC0_IMR, 0xfd);  // init keyboard
 	io_sti();
     
     init_video();
 	
-    // test console_io
-    uint a = 0x1234;
-    printui(a);
-    printc('\n');
-    printi(-a);
-    printc('\n');
-    printhex(a);
-    char s[15] = "Hello world";
-    printc('\n');
-    prints(s);
+    // test printf()
+    printf("%d %x %s\n", 123, 0x123, "Hello world");
+    int a = -1234;
+    uint b = 0xabcd;
+    char s[] = "Wu Hao";
+    printf("%d %x %s\n", a, b, s);
 
 loop:
     __asm__("nop\n\t");
