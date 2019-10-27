@@ -2,6 +2,7 @@
 
 void main()
 {
+    //mem_functest();
 	//中断
 	init_idt();
 	init_pic();
