@@ -37,9 +37,8 @@ void printi(int i);                     // print integer
 void printui(uint ui);                  // print unsigned integer
 void printhex(uint ui);                 // print hex of unsigned integer
 void prints(const char * s);            // print string
-void printd(double d);                  // print double
-// void printf(const char *fmt,...);
-// void printnum(int num, int base, int sign);
+void printn(float d);                   // print float
+void printf(const char *fmt,...);
 
 // implement in mem_manage.c
 void memcpy(char *dst, const char *src, int count, int size);
