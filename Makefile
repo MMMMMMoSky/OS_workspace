@@ -53,7 +53,7 @@ system: sys_head.o kernel
 Image: bootsect setup system
 	@dd if=bootsect of=Image bs=512 count=1
 	@dd if=setup of=Image bs=512 count=4 seek=1
-	@dd if=system of=Image bs=512 count=4 seek=5  
+	@dd if=system of=Image bs=512 count=100 seek=5  
 	@echo "Image built done"
 
 clean:

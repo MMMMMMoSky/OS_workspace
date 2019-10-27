@@ -1,5 +1,11 @@
 .code32
 
+.equ pg_dir, 0x70000
+.equ pg0, 0x71000
+.equ pg1, 0x72000
+.equ pg2, 0x73000
+.equ pg3, 0x74000
+
 .global main          # why is not _main ??
 .global io_in8, io_in16, io_in32
 .global io_out8, io_out16, io_out32
@@ -7,9 +13,50 @@
 .global io_store_idtr, inthandler21
 .extern print
 
-	call main       # jump to os_main.c main()
+    # call main       # jump to os_main.c main()
+    jmp after_page_tables
 loop:
 	jmp loop
+
+after_page_tables:
+	pushl $0		# These are the parameters to main :-)
+	pushl $0
+	pushl $0
+	pushl $L6		# return address for main, if it decides to.
+	pushl $main
+	jmp setup_paging
+L6:
+	jmp L6			# main should never return here, but
+					# just in case, we know what happens.
+
+setup_paging:
+	movl $1024*5,%ecx		    /* 5 pages - pg_dir+4 page tables */
+	xorl %eax,%eax
+	mov  $pg_dir, %edi			/* pg_dir is at 0x70000 */
+	cld;rep;stosl
+	mov  $pg_dir, %edi
+    mov  $pg0+7,%eax 
+	movl %eax,(%edi)		    /* set present bit/user r/w */
+    mov  $pg1+7,%eax 
+	movl %eax,4(%edi)		    /*  --------- " " --------- */
+    mov  $pg2+7,%eax 
+	movl %eax,8(%edi)		    /*  --------- " " --------- */
+    mov  $pg3+7,%eax 
+	movl %eax,12(%edi) 			/*  --------- " " --------- */
+	movl $pg3+4092,%edi
+	movl $0xfff007,%eax		    /*  16Mb - 4096 + 7 (r/w user,p) */
+	std
+1:	stosl			/* fill pages backwards - more efficient :-) */
+	subl $0x1000,%eax
+	jge 1b
+	mov  $pg_dir,%eax		    /* pg_dir is at 0x0000 */
+
+b:	movl %eax,%cr3		        /* cr3 - page directory start */
+	movl %cr0,%eax
+	orl $0x80000000,%eax
+	movl %eax,%cr0		        /* set paging (PG) bit */
+	ret
+
 
 
 # some functions called in C language
