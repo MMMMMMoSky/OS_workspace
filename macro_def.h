@@ -50,4 +50,21 @@ typedef char *va_list;
 #define io_cli() __asm__("cli\n\t")
 #define io_sti() __asm__("sti\n\t")
 
+
+//used in mem_manage.c
+//0x00000000 - 0x000fffff为低1M空间, 用于放置内核
+//0x10000000 - 0x01000000共15M, 为空闲物理页面(其实内存更大, 扩展可以以后再做)
+#define LOW_MEM 0x100000    
+#define PAGING_MEMORY (15*1024*1024)                //空闲物理页面所占用的内存大小
+#define PAGING_PAGES (PAGING_MEMORY >> 12)          //空闲物理页面分页后的页数
+#define MAP_NR(addr) (((addr) - LOW_MEM) >> 12)     //计算指定物理地址对应的页号
+#define USED 100                                    //表示页面处于被占用状态
+//该宏用于复制一页物理内存从 from 到 to
+#define copy_page(from,to) \
+    __asm__("cld ; rep ; movsl"::"S" (from),"D" (to),"c" (1024):)
+//用于使TLB失效, 刷新缓存
+#define invalidate() \
+__asm__ volatile("mov %%eax, %%cr3"::"a" (0))
+
+
 #endif
