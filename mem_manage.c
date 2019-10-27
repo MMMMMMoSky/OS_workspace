@@ -1,8 +1,8 @@
 #include "func_def.h"
 
 //每一项代表一页, 值为0则未使用, 值为100则被使用
-static unsigned char mem_map [ PAGING_PAGES ] = {0,};
-long high_memory = 0;
+static byte mem_map [ PAGING_PAGES ] = {0,};
+int high_memory = 0;
 
 
 void memcpy(char *dst, const char *src, int count, int size)
@@ -17,7 +17,7 @@ void memcpy(char *dst, const char *src, int count, int size)
 }
 
 //start:起始地址, end:终止地址
-void mem_init(long start, long end)
+void mem_init(int start, int end)
 {
     int i;
     for(i = 0; i < PAGING_PAGES; i++)
@@ -60,7 +60,7 @@ void mem_printmap(void)
 void mem_calc(void)
 {
     int i, j, k, free = 0;
-    long *pg_tbl, *pg_dir = 0x70000;
+    int *pg_tbl, *pg_dir = 0x70000;
 
     for(i = 0; i < PAGING_PAGES; i++)
         if(!mem_map[i]) free++;
@@ -69,7 +69,7 @@ void mem_calc(void)
     // 遍历除了页表页目录的其余页表项, 如果页面有效, 则统计有效页面数量
     for(i = 2; i < 1024; i++) {
         if(pg_dir[i] & 1) {     // 先检查 Dir 是否存在
-            pg_tbl = (long *)(0xfffff000 & pg_dir[i]);  // 计算 pg_tbl 的地址
+            pg_tbl = (int *)(0xfffff000 & pg_dir[i]);  // 计算 pg_tbl 的地址
             for(j = k = 0; j < 1024; j++) {
                 if(pg_tbl[j] & 1) {     // 检查 Entry 是否存在
                     k++;
@@ -82,8 +82,8 @@ void mem_calc(void)
 }
 
 //此函数用于获得一个空闲的页面, 返回值为内存页面对应的起始地址
-unsigned long mem_getfreepage(void) {
-   register unsigned long __res asm("ax");
+uint mem_getfreepage(void) {
+   register uint __res asm("ax");
    __asm__ volatile ("std; repne; scasb\n\t"
                 "jne 1f\n\t"
                 "movb $1, 1(%%edi)\n\t"
@@ -104,7 +104,7 @@ unsigned long mem_getfreepage(void) {
 void mem_functest(void)
 {
     mem_init(0x100000,0x0898f00);
-    long i = mem_getfreepage();
+    int i = mem_getfreepage();
     printhex(i);
     mem_calc();
 loop:
