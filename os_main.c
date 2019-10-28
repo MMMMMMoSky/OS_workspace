@@ -5,6 +5,7 @@ struct timer timer1;
 
 void main()
 {
+    
     io_cli();
 
     init_video(); 
@@ -17,7 +18,7 @@ void main()
     io_out8(PIC0_IMR, 0xf8);  // 打开键盘和定时器中断
 
     io_sti();
-	
+	//mem_functest();
     uint last_timer = timer1.count;
     while (1) {
         io_cli();
