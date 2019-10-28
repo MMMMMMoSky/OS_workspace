@@ -11,7 +11,7 @@
 .global io_out8, io_out16, io_out32
 .global io_load_eflags, io_store_eflags
 .global io_store_idtr, inthandler21, inthandler20
-.extern print, handle_IRQ0
+.extern keyboard_intr, handle_IRQ0
 
     # call main       # jump to os_main.c main()
     jmp after_page_tables
@@ -134,7 +134,7 @@ inthandler21:
 	mov %eax, %ds
 	mov %eax, %es
 	mov %eax, %fs
-	call print
+	call keyboard_intr
 	
 	pop %fs
 	pop %es
