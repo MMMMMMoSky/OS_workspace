@@ -54,7 +54,7 @@ void mem_printmap(void)
     }
     prints("from ");printi(i);prints(" to ");printi(j-1);prints(" : ");
     if(mem_map[i]==USED) prints("used"); else prints("idle");
-    printc('\n');
+    prints("\n\n");
 }
 
 void mem_calc(void)
@@ -81,6 +81,7 @@ void mem_calc(void)
     return ;
 }
 
+
 //此函数用于获得一个空闲的页面, 返回值为内存页面对应的起始地址
 uint mem_getfreepage(void) {
    register uint __res asm("ax");
@@ -100,13 +101,27 @@ uint mem_getfreepage(void) {
    return __res;
 }
 
+//释放给定物理地址的页面
+void mem_freepage(unsigned int addr)
+{
+	if (addr < LOW_MEM) return;
+	if (addr >= high_memory)
+		printf("trying to free nonexistent page");
+	addr -= LOW_MEM;
+	addr >>= 12;
+	if (mem_map[addr]--) return;
+	mem_map[addr]=0;
+	printf("trying to free free page");
+}
 
 void mem_functest(void)
 {
     mem_init(0x100000,0x0898f00);
-    int i = mem_getfreepage();
-    printhex(i);
-    mem_calc();
+    long i = mem_getfreepage();
+    //printf("%d",mem_map[1944]);
+    mem_printmap();
+    mem_freepage(i);
+    mem_printmap();
 loop:
     for(;;);
 }
