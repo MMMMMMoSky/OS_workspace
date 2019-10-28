@@ -23,4 +23,25 @@ struct timer
     byte data;
 };
 
+
+/*
+ *用于内存管理的结构体
+*/
+//桶结构体，一个桶代表一页内存
+struct bucket_desc
+{
+    void                *page;
+	struct bucket_desc	*next;
+	void			    *freeptr;
+	unsigned short		refcnt;
+	unsigned short		bucket_size;
+};
+
+struct _bucket_dir
+{
+    int size;
+    struct bucket_desc *chain;
+};
+
+
 #endif
