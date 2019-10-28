@@ -28,9 +28,12 @@ void init_pic()
 void init_idt()
 {
     struct idt_descriptor *idt = (struct idt_descriptor *)IDT_ADDR;
-    for (int i = 0; i < IDT_INTR_LIMIT; i++) {
-        set_idtdesc(idt + i, (int)&inthandler21, 0x08, 0x008e);
+    for (int i = 0; i < IDT_INTR_LIMIT; i++)
+    {
+        set_idtdesc(idt + i, 0, 0, 0);
     }
+    set_idtdesc(idt + 0x20, (int)&inthandler20, 0x08, 0x008e);
+    set_idtdesc(idt + 0x21, (int)&inthandler21, 0x08, 0x008e);
     io_store_idtr(0x7ff, IDT_ADDR);
 }
 
@@ -43,11 +46,32 @@ void set_idtdesc(struct idt_descriptor *id, int offset, int selector, int ar)
     id->offset_high = (offset >> 16) & 0xffff;
 }
 
-//暂时用于键盘中断调用函数
-void print(void)
-{	
-	int data;
-	io_out8(PIC0_OCW2, 0x61);
-	data = io_in8(0x0060);
-	v_putchar('a');
+void init_pit(struct timer *timer1)
+{
+    io_out8(PIT_CTRL, 0x34);
+    io_out8(PIT_CNT0, 0x9c);
+    io_out8(PIT_CNT0, 0x2e);
+    timer1->count = 0;
+    timer1->timeout = 0;
+}
+
+
+// 以下两个函数在汇编中被调用, 也没有在 func_def.h 中声明
+
+// 键盘中断调用函数
+void keyboard_intr()
+{
+    byte data;
+    io_out8(PIC0_OCW2, 0x61);
+    data = io_in8(0x0060);
+    extern struct buffer kb_buf;
+    put_byte_buffer(&kb_buf, data);
+}
+
+// 时间中断IRQ0
+void handle_IRQ0(void)
+{
+    io_out8(PIC0_OCW2, 0X60);
+    extern struct timer timer1;
+    timer1.count++;
 }

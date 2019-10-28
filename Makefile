@@ -37,14 +37,17 @@ text_video.o: text_video.c
 mem_manage.o: mem_manage.c
 	@$(CC) -c mem_manage.c -o mem_manage.o $(CFLAGS)
 
+byte_buffer.o: byte_buffer.c
+	@$(CC) -c byte_buffer.c -o byte_buffer.o $(CFLAGS)
+
 console_io.o: console_io.c
 	@$(CC) -c console_io.c -o console_io.o $(CFLAGS)
 
 hardware_init.o: hardware_init.c
 	@$(CC) -c hardware_init.c -o hardware_init.o $(CFLAGS)
 
-kernel: hardware_init.o mem_manage.o os_main.o text_video.o console_io.o
-	@ld $(LDFLAGS) -r -N -o kernel os_main.o mem_manage.o hardware_init.o text_video.o console_io.o
+kernel: hardware_init.o mem_manage.o os_main.o text_video.o console_io.o byte_buffer.o
+	@ld $(LDFLAGS) -r -N -o kernel os_main.o mem_manage.o hardware_init.o text_video.o console_io.o byte_buffer.o
 
 system: sys_head.o kernel
 	@ld -T ld_script.ld sys_head.o kernel -o system

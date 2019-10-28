@@ -1,23 +1,25 @@
 #include "func_def.h"
 
+struct byte_buffer kb_buf;
+struct timer timer1;
+
 void main()
 {
-    //mem_functest();
-	//中断
-	init_idt();
-	init_pic();
-	io_cli();
-	io_out8(PIC0_IMR, 0xfd);  // init keyboard
-	io_sti();
-    
-    init_video();
+    io_cli();
+
+    init_video(); 
+
+    init_idt();
+    init_pic();
+
+    init_byte_buffer(&kb_buf);
+    init_pit(&timer1);
+    io_out8(PIC0_IMR, 0xf8);
+
+    io_sti();
 	
-    // test printf()
-    printf("%d %x %s\n", 123, 0x123, "Hello world");
-    int a = -1234;
-    uint b = 0xabcd;
-    char s[] = "Wu Hao";
-    printf("%d %x %s\n", a, b, s);
+    // test timer
+    printf("Hello world!");
 
 loop:
     __asm__("nop\n\t");

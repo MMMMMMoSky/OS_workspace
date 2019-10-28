@@ -46,6 +46,10 @@ typedef char *va_list;
 #define PIC1_ICW3       0x00a1
 #define PIC1_ICW4       0x00a1
 
+// used in timer init
+#define PIT_CTRL	0x0043
+#define PIT_CNT0	0x0040
+
 // cli and sti, use like function
 #define io_cli() __asm__("cli\n\t")
 #define io_sti() __asm__("sti\n\t")

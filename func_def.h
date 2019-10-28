@@ -16,12 +16,14 @@ int io_load_eflags();
 void io_store_eflags(int eflags);
 void io_store_idtr(int limit, int addr);
 void inthandler21(void);
+void inthandler20(void);
 
 // implemented in hardware_init.c
 void init_video();
 void init_pic();
 void init_idt();
 void set_idtdesc(struct idt_descriptor *id, int offset, int selector, int ar);
+void init_pit(struct timer *ptm);
 
 
 // implement in text_video.c
@@ -43,5 +45,11 @@ void printf(const char *fmt, ...);      // supports %s %c %d %x %u %f
 // implement in mem_manage.c
 void memcpy(char *dst, const char *src, int count, int size);
 void mem_functest(void);
+
+// implement in byte_buffer.c
+void init_byte_buffer(struct byte_buffer* buf);
+void put_byte_buffer(struct byte_buffer* buf, byte data);
+byte get_byte_buffer(struct byte_buffer* buf);
+
 
 #endif
