@@ -50,6 +50,9 @@ typedef char *va_list;
 #define io_cli() __asm__("cli\n\t")
 #define io_sti() __asm__("sti\n\t")
 
+// used in struct_def.h
+#define BYTE_BUFFER_SIZE 32
+
 
 // used in mem_manage.c
 // 0x00000000 - 0x000fffff为低1M空间, 用于放置内核
