@@ -1,6 +1,7 @@
 .PHONY = clean run all
 CC = gcc 
 CFLAGS = -m32 -fomit-frame-pointer -fno-pie -fno-stack-protector -nostdlib -fno-builtin
+C_OBJS = os_main.o mem_manage.o hardware_init.o text_video.o console_io.o byte_buffer.o
 LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null | head -n 1)
 
 all: Image
@@ -8,56 +9,48 @@ all: Image
 run: Image
 	@qemu-system-i386 -boot a -fda Image
 
-bootsect.o: bootsect.S
-	@as --32 bootsect.S -o bootsect.o
-
+# bootsect
+bootsect.o: bootsect.asm
+	@as --32 bootsect.asm -o bootsect.o
 bootsect: bootsect.o ld_script.ld
 	@ld -T ld_script.ld bootsect.o -o bootsect
 	@objcopy -O binary -j .text bootsect
 
-setup.o: setup.S 
-	@as --32 setup.S -o setup.o
-
+# setup program
+setup.o: setup.asm 
+	@as --32 setup.asm -o setup.o
 setup: setup.o ld_script.ld
 	@ld -T ld_script.ld setup.o -o setup
 	@objcopy -O binary -j .text setup
 
-sys_head.o: sys_head.S 
-	@as --32 sys_head.S -o sys_head.o
+# system head
+sys_head.o: sys_head.asm 
+	@as --32 sys_head.asm -o sys_head.o
 
-os_main.o: os_main.c
-	@$(CC) -c os_main.c -o os_main.o $(CFLAGS)
+# 针对 C 源代码 的编译
+%.o: %.c
+	@$(CC) -c $*.c -o $*.o $(CFLAGS)
+%.s: %.c 
+	@$(CC) -S $*.c -o $*.s $(CFLAGS)
 
-os_main.s: os_main.c
-	@$(CC) -S os_main.c -o os_main.s $(CFLAGS)
+# system kernel: all C sources
+kernel: $(C_OBJS)
+	@ld $(LDFLAGS) -r -N -o kernel $(C_OBJS)
 
-text_video.o: text_video.c
-	@$(CC) -c text_video.c -o text_video.o $(CFLAGS)
-
-mem_manage.o: mem_manage.c
-	@$(CC) -c mem_manage.c -o mem_manage.o $(CFLAGS)
-
-byte_buffer.o: byte_buffer.c
-	@$(CC) -c byte_buffer.c -o byte_buffer.o $(CFLAGS)
-
-console_io.o: console_io.c
-	@$(CC) -c console_io.c -o console_io.o $(CFLAGS)
-
-hardware_init.o: hardware_init.c
-	@$(CC) -c hardware_init.c -o hardware_init.o $(CFLAGS)
-
-kernel: hardware_init.o mem_manage.o os_main.o text_video.o console_io.o byte_buffer.o
-	@ld $(LDFLAGS) -r -N -o kernel os_main.o mem_manage.o hardware_init.o text_video.o console_io.o byte_buffer.o
-
+# system: system head + kernel
 system: sys_head.o kernel
 	@ld -T ld_script.ld sys_head.o kernel -o system
 	@objcopy -O binary -R .note -R .comment system 
 
+# system Image: bootsect(1 sector) + setup(4 sectors) + system
 Image: bootsect setup system
 	@dd if=bootsect of=Image bs=512 count=1
 	@dd if=setup of=Image bs=512 count=4 seek=1
 	@dd if=system of=Image bs=512 count=100 seek=5  
 	@echo "Image built done"
 
+bochs: Image 
+	@bochs
+
 clean:
-	@rm -f *.o bootsect setup Image sys_head os_main os_main.s system kernel
+	@rm -f *.o *.s bootsect setup sys_head kernel system Image
