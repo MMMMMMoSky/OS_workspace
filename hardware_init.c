@@ -64,7 +64,7 @@ void keyboard_intr()
     byte data;
     io_out8(PIC0_OCW2, 0x61);
     data = io_in8(0x0060);
-    extern struct buffer kb_buf;
+    extern struct byte_buffer kb_buf;
     put_byte_buffer(&kb_buf, data);
 }
 
@@ -74,4 +74,5 @@ void handle_IRQ0(void)
     io_out8(PIC0_OCW2, 0X60);
     extern struct timer timer1;
     timer1.count++;
+    // TODO
 }
