@@ -10,8 +10,8 @@
 .global io_in8, io_in16, io_in32
 .global io_out8, io_out16, io_out32
 .global io_load_eflags, io_store_eflags
-.global io_store_idtr, inthandler21
-.extern print
+.global io_store_idtr, inthandler21, inthandler20
+.extern print, handle_IRQ0
 
     # call main       # jump to os_main.c main()
     jmp after_page_tables
@@ -135,6 +135,28 @@ inthandler21:
 	mov %eax, %es
 	mov %eax, %fs
 	call print
+	
+	pop %fs
+	pop %es
+	pop %ds
+	popl %edx
+	popl %ecx
+	popl %eax
+	iret 
+
+inthandler20:
+	pushl %eax
+	pushl %ecx
+	pushl %edx
+	push %ds
+	push %es
+	push %fs
+	
+	mov $0x10, %eax
+	mov %eax, %ds
+	mov %eax, %es
+	mov %eax, %fs
+	call handle_IRQ0
 	
 	pop %fs
 	pop %es
