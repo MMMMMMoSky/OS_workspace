@@ -4,9 +4,9 @@
 struct idt_descriptor
 {
     short offset_low;
-    short offset_high;
     short selector;
     char dw_count, access_right;
+    short offset_high;
 };
 
 struct byte_buffer
