@@ -41,7 +41,7 @@ void printn(float n);              // print float
 void printf(const char *fmt, ...); // supports %s %c %d %x %u %f
 
 // implement in mem_manage.c
-void memcpy(char *dst, const char *src, int count, int size);
+void memcpy(byte* dst, const byte* src, uint count);
 void mem_functest(void);
 
 // implement in byte_buffer.c
@@ -55,5 +55,8 @@ void timer_free(struct timer *timer);
 void timer_init(struct timer *timer, struct byte_buffer *buf, byte data);
 void timer_settime(struct timer *timer, uint timeout, struct timer_queue *tq);
 void set_timer(struct timer *timer, struct byte_buffer *buf, byte data, uint timeout, struct timer_queue *tq);
+
+// implement in terminal.c
+uint start_new_terminal();
 
 #endif
