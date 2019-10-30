@@ -42,6 +42,8 @@ void printf(const char *fmt, ...); // supports %s %c %d %x %u %f
 
 // implement in mem_manage.c
 void memcpy(byte* dst, const byte* src, uint count);
+void *mem_alloc(uint len);
+void mem_free(void *obj, uint size);
 void mem_functest(void);
 
 // implement in byte_buffer.c

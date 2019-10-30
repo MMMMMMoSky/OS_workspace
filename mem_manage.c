@@ -224,7 +224,7 @@ void *mem_alloc(uint len)
     return ret;
 }
 
-void *mem_free(void *obj, int size)
+void mem_free(void *obj, uint size)
 {
     struct _bucket_dir *bdir;
     struct bucket_desc *bdesc, *prev;
