@@ -46,15 +46,18 @@ void set_idtdesc(struct idt_descriptor *id, int offset, int selector, int ar)
     id->offset_high = (offset >> 16) & 0xffff;
 }
 
-void init_pit(struct timer *timer1)
+void init_pit(struct timer_queue *tq)
 {
     io_out8(PIT_CTRL, 0x34);
     io_out8(PIT_CNT0, 0x9c);
     io_out8(PIT_CNT0, 0x2e);
-    timer1->count = 0;
-    timer1->timeout = 0;
+    tq->count = 0;
+    tq->next = 0xffffffff;
+    for (int i = 0; i < TIMER_NUM; i++)
+    {
+        tq->timer[i].flags = 0;
+    }
 }
-
 
 // 以下两个函数在汇编中被调用, 也没有在 func_def.h 中声明
 
@@ -72,7 +75,29 @@ void keyboard_intr()
 void handle_IRQ0(void)
 {
     io_out8(PIC0_OCW2, 0X60);
-    extern struct timer timer1;
-    timer1.count++;
-    // TODO
+    extern struct timer_queue timer_q;
+    timer_q.count++;
+    if (timer_q.next > timer_q.count)
+    {
+        return;
+    }
+    timer_q.next = MAX_TIME;
+    for (int i = 0; i < TIMER_NUM; i++)
+    {
+        if (timer_q.timer[i].flags == TIMER_FLAGS_USING)
+        {
+            if (timer_q.timer[i].timeout <= timer_q.count)
+            {
+                timer_q.timer[i].flags = TIMER_FLAGS_ALLOC;
+                put_byte_buffer(timer_q.timer[i].buf, timer_q.timer[i].data);
+            }
+            else
+            {
+                if (timer_q.next > timer_q.timer[i].timeout)
+                {
+                    timer_q.next = timer_q.timer[i].timeout;
+                }
+            }
+        }
+    }
 }

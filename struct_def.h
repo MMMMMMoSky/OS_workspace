@@ -11,18 +11,23 @@ struct idt_descriptor
 
 struct byte_buffer
 {
-    byte data[BYTE_BUFFER_SIZE];
+    byte data[BYTE_BUFFER_SIZE]; //32
     uint start, end, length;
 };
 
-struct timer 
+struct timer
 {
-    uint count;
+    uint flags; //flag=1表示还未运行已经配置状态，2表示正在运行,0表示未使用
     uint timeout;
     struct byte_buffer *buf;
     byte data;
 };
 
+struct timer_queue
+{
+    uint count, next;
+    struct timer timer[TIMER_NUM]; //300
+};
 
 /*
  *用于内存管理的结构体
@@ -30,11 +35,11 @@ struct timer
 //桶结构体，一个桶代表一页内存
 struct bucket_desc
 {
-    void                *page;
-	struct bucket_desc	*next;
-	void			    *freeptr;
-	unsigned short		refcnt;
-	unsigned short		bucket_size;
+    void *page;
+    struct bucket_desc *next;
+    void *freeptr;
+    unsigned short refcnt;
+    unsigned short bucket_size;
 };
 
 struct _bucket_dir
