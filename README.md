@@ -27,10 +27,13 @@ as 汇编器
     - `func_def.h`: 各种函数的声明
   - **C**:
     - `os_main.c`: `main()` 函数的定义, 操作系统的起点
+    - `byte_buffer.c`: 字节缓冲区(FIFO)相关功能的实现
     - `console_io.c`: 包含控制台输出的相关函数的实现
     - `hardware_init.c`: 硬件初始化函数的实现
     - `men_manage.c`: 内存管理相关函数的实现
+    - `terminal.c`: 终端的实现
     - `text_video.c`: VGA 0x03 号字符模式下画面控制相关函数的实现
+    - `time.c`: 定时器相关功能的实现
 - 其他:
   - `ld_script.ld` 链接脚本, 用于去掉 elf 文件头
 
