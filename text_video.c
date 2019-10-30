@@ -67,9 +67,9 @@ void v_roll_screen()
     for (int i = 1; i < VIDEO_Y_SZ; i++)
     {
         memcpy(
-            (char*)(VIDEO_MEM + (i - 1) * VIDEO_X_SZ * 2), 
-            (char*)(VIDEO_MEM + i * VIDEO_X_SZ * 2), 
-            VIDEO_X_SZ, 2 * sizeof(char)
+            (byte*)(VIDEO_MEM + (i - 1) * VIDEO_X_SZ * 2), 
+            (byte*)(VIDEO_MEM + i * VIDEO_X_SZ * 2), 
+            VIDEO_X_SZ * 2
         );
     }
     // Clear the last line

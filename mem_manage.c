@@ -6,14 +6,10 @@ static byte mem_map[PAGING_PAGES] = {
 };
 int high_memory = 0;
 
-void memcpy(char *dst, const char *src, int count, int size)
+void memcpy(byte *dst, const byte *src, uint count)
 {
-    for (int i = 0; i < count; i++)
-    {
-        for (int j = 0; j < size; j++)
-        {
-            *(dst + i * size + j) = *(src + i * size + j);
-        }
+    while (count--) {
+        *(dst + count) = *(src + count);
     }
 }
 
