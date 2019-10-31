@@ -60,5 +60,6 @@ void set_timer(struct timer *timer, struct byte_buffer *buf, byte data, uint tim
 
 // implement in terminal.c
 uint start_new_terminal();
+void running_term();
 
 #endif

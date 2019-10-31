@@ -21,6 +21,7 @@ typedef char *va_list;
 
 // VGA 80x25x16 text mode
 #define VIDEO_MEM 0xB8000
+#define VIDEO_MEM_SIZE 4000  // 80 * 25 * 2
 #define VIDEO_X_SZ 80
 #define VIDEO_Y_SZ 25
 
@@ -52,6 +53,9 @@ typedef char *va_list;
 // cli and sti, use like function
 #define io_cli() __asm__("cli\n\t")
 #define io_sti() __asm__("sti\n\t")
+
+// used in terminal.c
+#define MAX_TERMINAL_CNT 16
 
 // used in struct_def.h
 #define BYTE_BUFFER_SIZE 32

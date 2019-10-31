@@ -305,11 +305,17 @@ void mem_initbdir()
     return;
 }
 
-// 用于测试内存管理函数
-void mem_functest(void)
+//调用mem管理函数之前需要先调用一下初始化函数
+void mem_init_all()
 {
     mem_init(0x100000, 0x0898f00);
     mem_initbdir();
+}
+
+// 用于测试内存管理函数
+void mem_functest(void)
+{
+    mem_init_all();
     void *addr = mem_alloc(100);
     void *addr2 = mem_alloc(1000);
     void *addr3 = mem_alloc(512);
