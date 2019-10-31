@@ -102,6 +102,18 @@ load_system_loop:
         mov $18, %cx
         call print_str
 
+# 读取硬盘参数并存储在0x5f700
+	mov	$0,  %ax
+	mov	%ax, %ds
+        mov     $0x104, %bx
+	lds	(%bx),%si
+	mov	$0x5f70,%ax
+	mov	%ax,%es
+	mov	$0,%di
+	mov	$0x10,%cx
+	rep
+	movsb
+
 # 3. VGA 0x03 80x25x16 text
         mov $str_enter_vga, %ax
         mov $30, %cx
