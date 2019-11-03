@@ -6,7 +6,7 @@ struct timer timer1,timer2,timer3;
 
 void main()
 {
-    
+
     io_cli();
 
     init_video(); 
@@ -20,6 +20,8 @@ void main()
 
     io_sti();
 
+    test_hard_disk();
+    
     start_new_terminal();
     running_term();
 

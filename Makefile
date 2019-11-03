@@ -1,7 +1,7 @@
 .PHONY = clean run all
 CC = gcc 
 CFLAGS = -m32 -fomit-frame-pointer -fno-pie -fno-stack-protector -nostdlib -fno-builtin
-C_OBJS = os_main.o mem_manage.o hardware_init.o text_video.o console_io.o byte_buffer.o time.o terminal.o
+C_OBJS = os_main.o mem_manage.o hardware_init.o text_video.o console_io.o byte_buffer.o time.o terminal.o hard_disk.o
 LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null | head -n 1)
 
 all: Image
@@ -50,7 +50,7 @@ Image: bootsect setup system
 	@echo "Image built done"
 
 bochs: Image 
-	@bochs
+	@/usr/bin/bochs
 
 clean:
 	@rm -f *.o *.s bootsect setup sys_head kernel system Image

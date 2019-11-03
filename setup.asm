@@ -107,12 +107,14 @@ load_system_loop:
 	mov	%ax, %ds
         mov     $0x104, %bx
 	lds	(%bx),%si
-	mov	$0x5f70,%ax
+	mov	$0x9020,%ax
 	mov	%ax,%es
 	mov	$0,%di
 	mov	$0x10,%cx
 	rep
 	movsb
+
+
 
 # 3. VGA 0x03 80x25x16 text
         mov $str_enter_vga, %ax
@@ -144,6 +146,7 @@ move_repeat:
         jne move_repeat
         # move finished
 
+
 # 5. Set up GDT
         # bochs instruction address: 0x800d3
         mov $GDT_SEG_ADDR, %ax              
@@ -167,6 +170,18 @@ move_repeat:
         shl $4, %ebx
         movl %ebx, 34(%eax)                     # GDT address
         lgdt 32(%eax)
+
+# 
+	mov	$0x9020, %ax
+	mov	%ax, %ds
+        mov     $0x5f70, %ax
+	mov	%ax, %es
+        mov     $0,  %di
+        mov     $0,  %si
+	mov	$0x10,%cx
+	rep
+	movsb
+
 
 # 6 Enable Protected Mode
 	mov %cr0, %eax

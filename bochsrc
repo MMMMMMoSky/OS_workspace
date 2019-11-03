@@ -1,4 +1,4 @@
 floppya: 1_44="./Image", status=inserted  # Use Floppy Disk A for booting
-ata0-master: type=disk, path="rootimage-0.12-hd", mode=flat, cylinders=487, heads=16, spt=63
+ata0-master: type=disk, path="rootimage", mode=flat, cylinders=487, heads=16, spt=63
 boot: floppy
 display_library: x, options="gui_debug"    # Uncomment this line to enable GUI debugger
