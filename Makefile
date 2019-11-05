@@ -6,8 +6,8 @@ LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null | head -n 1)
 
 all: Image
 
-run-qemu: Image
-	@qemu-system-i386 -boot a -fda Image
+run-qemu: Image hard_disk_drive
+	@qemu-system-i386 -boot a -fda Image -hda hard_disk_drive
 
 # bootsect
 bootsect.o: bootsect.asm
