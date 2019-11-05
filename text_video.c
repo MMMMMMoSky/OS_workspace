@@ -2,6 +2,19 @@
 
 uint cursor_x, cursor_y;
 
+void v_backspace()
+{
+    if (cursor_x == 0) {
+        if (cursor_y == 0) return;
+        cursor_x = VIDEO_X_SZ - 1;
+        cursor_y--;
+    }
+    else {
+        cursor_x--;
+    }
+    v_putchar_at(0, cursor_x, cursor_y, 0x0f);
+}
+
 void v_putchar(char ch)
 {
     if (ch == '\n')
