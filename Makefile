@@ -6,7 +6,7 @@ LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null | head -n 1)
 
 all: Image
 
-run: Image
+run-qemu: Image
 	@qemu-system-i386 -boot a -fda Image
 
 # bootsect
@@ -49,8 +49,12 @@ Image: bootsect setup system
 	@dd if=system of=Image bs=512 count=100 seek=5  
 	@echo "Image built done"
 
-bochs: Image 
+# make hard disk
+hard_disk_drive:
+	@qemu-img create hard_disk_drive 100M
+
+run-bochs: Image hard_disk_drive
 	@/usr/bin/bochs
 
 clean:
-	@rm -f *.o *.s bootsect setup sys_head kernel system Image
+	@rm -f *.o *.s bootsect setup sys_head kernel system Image hard_disk_drive
