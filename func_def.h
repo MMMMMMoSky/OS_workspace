@@ -28,6 +28,7 @@ void init_pit(struct timer_queue *tq);
 void v_clear();
 void v_roll_screen();
 void v_move_cursor(uint x, uint y);
+void v_backspace();
 void v_putchar(char ch);
 void v_putchar_at(char ch, uint x, uint y, uint color);
 
@@ -39,6 +40,7 @@ void printhex(uint ui);            // print hex of unsigned integer
 void prints(const char *s);        // print string
 void printn(float n);              // print float
 void printf(const char *fmt, ...); // supports %s %c %d %x %u %f
+byte strcmp(const char *lhs, const char *rhs);  // compare two strings, if equal return 0
 
 // implement in mem_manage.c
 void memcpy(byte* dst, const byte* src, uint count);
@@ -62,7 +64,12 @@ void set_timer(struct timer *timer, struct byte_buffer *buf, byte data, uint tim
 uint start_new_terminal();
 void running_term();
 
-//implement in hard_disk.c
+// implement in hard_disk.c
 void test_hard_disk();
+
+// implement in builtin_commands.c
+void cmd_echo(const char *param);
+void cmd_clear(const char *param);
+void cmd_invalid_cmd(const char *param);
 
 #endif
