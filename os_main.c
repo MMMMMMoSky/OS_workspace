@@ -4,9 +4,8 @@ struct byte_buffer kb_buf,timer1_buf,timer2_buf,timer3_buf;
 struct timer_queue timer_q;
 struct timer timer1,timer2,timer3;
 
-void main()
+void main()  // bochs address: 0x106
 {
-
     io_cli();
 
     init_video(); 
