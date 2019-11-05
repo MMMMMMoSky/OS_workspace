@@ -91,3 +91,12 @@ void printf(const char *fmt, ...)
         }
     }
 }
+
+byte strcmp(const char *lhs, const char *rhs)
+{
+    while ((*lhs) && (*rhs)) {
+        if ((*lhs) != (*rhs)) return 1;
+        if ((*lhs) == 0) return 0;
+        lhs++; rhs++;
+    }
+}
