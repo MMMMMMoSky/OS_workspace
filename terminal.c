@@ -112,6 +112,9 @@ void exec_command(char *cmd_line)
     else if (strcmp(cmd_line, "clear") == 0) {
         cmd_clear(cmd_line + cmd + 1);
     }
+    else if (strcmp(cmd_line, "num-conv") == 0) {
+        cmd_num_conv(cmd_line + cmd + 1);
+    }
     // else if (strcmp(cmd_line, "name") == 0) {
     //     cmd_name(cmd_line + cmd + 1);
     // }
