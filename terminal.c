@@ -99,30 +99,39 @@ char kb_decode(byte data)
 
 void exec_command(char *cmd_line)
 {
-    uint cmd = 0;
-    while (cmd_line[cmd] != ' ' && cmd_line[cmd] != 0) {
-        cmd++;
-    }
-    char old = cmd_line[cmd];
-    cmd_line[cmd] = 0;
+    // remove prefix spaces
+    while (*cmd_line && *cmd_line == ' ') cmd_line++;
+    if (*cmd_line == 0) return;
+
+    // find first space (or \0)
+    char *first_space = cmd_line;
+    while (*first_space && *first_space != ' ') first_space++;
+    // find the start of parameters
+    char *param = first_space;
+    while (*param && *param == ' ') param++;
+
+    // temporaryily change the first space to 0, for strcmp()
+    char old = *first_space;
+    *first_space = 0;  
 
     if (strcmp(cmd_line, "echo") == 0) {
-        cmd_echo(cmd_line + cmd + 1);
+        cmd_echo(param);
     }
     else if (strcmp(cmd_line, "clear") == 0) {
-        cmd_clear(cmd_line + cmd + 1);
+        cmd_clear(param);
     }
     else if (strcmp(cmd_line, "num-conv") == 0) {
-        cmd_num_conv(cmd_line + cmd + 1);
+        cmd_num_conv(param);
     }
     // else if (strcmp(cmd_line, "name") == 0) {
-    //     cmd_name(cmd_line + cmd + 1);
+    //     cmd_name(param);
     // }
     else {
-        cmd_invalid_cmd(cmd_line + cmd + 1);
+        cmd_invalid_cmd(param);
     }
 
-    cmd_line[cmd] = old;
+    // resume the first space
+    *first_space = old;
 }
 
 // terminal process; start this function after all os init done
