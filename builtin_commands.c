@@ -75,10 +75,7 @@ void cmd_num_conv(const char *param)
     const char *p = param;
     uint from = 0, to = 0;
 
-    // FOR DEBUG
-    // printf("parsing options...");
-
-    // parse options
+    // 1. parse options
     while (1) {
         while (*p && *p != '-') p++;  // find '-'
         if (*p == 0) break;
@@ -93,8 +90,8 @@ void cmd_num_conv(const char *param)
                 goto cmd_num_conv_bad_syntax;
             }
             // parse -f
-            while (*p != ' ') p++;
-            p++;
+            while (*p != ' ') p++;  // skip from
+            while (*p == ' ') p++;  // skip spaces after -from
             while (*p && *p != ' ') {
                 if (*p < '0' || *p > '9') {
                     goto cmd_num_conv_base_out_of_range;
@@ -113,7 +110,7 @@ void cmd_num_conv(const char *param)
             }
             // parse -t
             while (*p != ' ') p++;
-            p++;
+            while (*p == ' ') p++;
             while (*p && *p != ' ') {
                 if (*p < '0' || *p > '9') {
                     goto cmd_num_conv_base_out_of_range;
@@ -130,22 +127,18 @@ void cmd_num_conv(const char *param)
             goto cmd_num_conv_bad_syntax;
         }
     }
-
-    // FOR DEBUG
-    // printf("ok\nparsing number...");
-
     // default base
     if (from == 0) from = 10;
     if (to == 0) to = 10;
 
-    // parse number
+    // 2. parse number
     p = param;
     while (*p) {
         while (*p && *p == ' ') p++;
-        if (*p == '-') {
-            while (*p && *p != ' ') p++;
-            p++;
-            while (*p && *p != ' ') p++;
+        if (*p == '-') {  // skip an option
+            while (*p && *p != ' ') p++;  // skip -from/-f/-to/-t
+            while (*p && *p == ' ') p++;  // skip spaces after -from
+            while (*p && *p != ' ') p++;  // skip base number
         }
         else break;
     }
@@ -153,6 +146,7 @@ void cmd_num_conv(const char *param)
         prints("Error: please input number\n");
         goto cmd_num_conv_bad_syntax;
     }
+    // start calc number
     uint number = 0;
     while (*p && *p != ' ') {
         uint digit = parse_digit(*p);
@@ -164,10 +158,7 @@ void cmd_num_conv(const char *param)
         p++;
     }
 
-    // FOR DEBUG
-    // printf("ok\nconverting number...\n");
-
-    // convert number
+    // 3. convert number
     char res[64];
     convert_num_base(number, to, res);
     prints(res);
