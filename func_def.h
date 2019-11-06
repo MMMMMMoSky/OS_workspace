@@ -70,6 +70,7 @@ void test_hard_disk();
 
 // implement in builtin_commands.c
 void cmd_echo(const char *param);
+void cmd_sleep(const char *param);
 void cmd_clear(const char *param);
 void cmd_num_conv(const char *param);
 void cmd_invalid_cmd(const char *param);

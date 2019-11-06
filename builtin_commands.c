@@ -64,7 +64,7 @@ void convert_num_base(uint number, uint target_base, char *result)
 
     for (uint l = 0, r = len - 1; l < r; l++, r--) {
         char tmp = result[l];
-        result[l] =result[r];
+        result[l] = result[r];
         result[r] = tmp;
     }
 }
@@ -165,10 +165,106 @@ void cmd_num_conv(const char *param)
     printc('\n');
     return ;
 
-    cmd_num_conv_base_out_of_range:
+cmd_num_conv_base_out_of_range:
     prints("Error: base must be in range of [2, 16]\n");
     goto cmd_num_conv_bad_syntax;
 
-    cmd_num_conv_bad_syntax:
+cmd_num_conv_bad_syntax:
     prints("Try 'num-conv -h' for more information\n");
+}
+
+void cmd_sleep(const char *param)
+{
+    extern struct timer_queue timer_q;
+    struct timer timer_sleep, timer_sleep_gap;
+    struct byte_buffer sleep_buffer, sleep_buffer_gap;
+    int i = 0;
+    int flag = 0;
+    int flag2 = 0;
+    while (param[i] != '\0')
+    {
+        if (param[i] == '-' && param[i + 1] == 'd')
+        {
+            flag = 1;
+        }
+        i++;
+    }
+    int length = i;
+    if (flag == 0)
+    {
+        int sum_time = 0;
+        for (int i = 0; i < length && flag2 != -1; i++)
+        {
+            if (param[i] > 47 && param[i] < 59)
+            {
+                sum_time = sum_time * 10 + param[i] - 48;
+            }
+            else
+            {
+                flag2 = -1;
+                prints("Error: time must be an interger\n");
+                break;
+            }
+        }
+
+        if (flag2 != -1)
+        {
+            set_timer(&timer_sleep, &sleep_buffer, '1', sum_time / 1000, &timer_q);
+            for (;;)
+            {
+                if (sleep_buffer.length != 0)
+                {
+                    prints("sleep end.\n");
+                    break;
+                }
+            }
+        }
+    }
+    if (flag == 1)
+    {
+        int sum_time = 0;
+        int gap_time = 0;
+        int sequence = 1;
+        for (int i = 0; i < length && flag2 != -1; i++)
+        {
+            if (sequence == 1 && param[i] > 47 && param[i] < 59)
+            {
+                sum_time = sum_time * 10 + param[i] - 48;
+            }
+            else if (sequence == 1 && param[i++] == ' ' && param[i++] == '-' && param[i++] == 'd' && param[i] == ' ')
+            {
+                sequence = 2;
+                continue;
+            }
+            else if (sequence == 2 && param[i] > 47 && param[i] < 59)
+            {
+                gap_time = gap_time * 10 + param[i] - 48;
+            }
+            else
+            {
+                flag2 = -1;
+                prints("Error: sleep time1 -d time2\n");
+                break;
+            }
+        }
+        if (flag2 != -1)
+        {
+            set_timer(&timer_sleep_gap, &sleep_buffer_gap, '1', gap_time / 1000, &timer_q);
+            int num = 1;
+            for (;;)
+            {
+                if (num == sum_time / gap_time + 1)
+                {
+                    prints("sleep end.\n");
+                    break;
+                }
+                if (sleep_buffer_gap.length != 0)
+                {
+                    printf("sleep %dms\n", gap_time * (num++));
+                    timer_free(&timer_sleep_gap);
+                    set_timer(&timer_sleep_gap, &sleep_buffer_gap, '1', gap_time / 1000, &timer_q);
+                }
+            }
+        }
+    }
 }

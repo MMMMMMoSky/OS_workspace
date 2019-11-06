@@ -123,6 +123,9 @@ void exec_command(char *cmd_line)
     else if (strcmp(cmd_line, "num-conv") == 0) {
         cmd_num_conv(param);
     }
+    else if (strcmp(cmd_line, "sleep") == 0) {
+        cmd_sleep(param);
+    }
     // else if (strcmp(cmd_line, "name") == 0) {
     //     cmd_name(param);
     // }
