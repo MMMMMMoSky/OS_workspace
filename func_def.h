@@ -41,6 +41,7 @@ void prints(const char *s);        // print string
 void printn(float n);              // print float
 void printf(const char *fmt, ...); // supports %s %c %d %x %u %f
 byte strcmp(const char *lhs, const char *rhs);  // compare two strings, if equal return 0
+byte strncmp(const char *lhs, const char *rhs, uint length); // compare first length char of two strings
 
 // implement in mem_manage.c
 void memcpy(byte* dst, const byte* src, uint count);

@@ -100,3 +100,13 @@ byte strcmp(const char *lhs, const char *rhs)
     }
     return 1;
 }
+
+byte strncmp(const char *lhs, const char *rhs, uint length)
+{
+    for (uint i = 0; i < length; i++) {
+        if (lhs[i] == 0 || rhs[i] == 0 || lhs[i] != rhs[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
