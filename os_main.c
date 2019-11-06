@@ -6,6 +6,7 @@ struct timer timer1,timer2,timer3;
 
 void main()  // bochs address: 0x106
 {
+    // some initialization
     io_cli();
 
     init_video(); 
@@ -19,8 +20,7 @@ void main()  // bochs address: 0x106
 
     io_sti();
 
-    test_hard_disk();
-    
+    // start terminal process 
     start_new_terminal();
     running_term();
 
