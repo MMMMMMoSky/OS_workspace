@@ -34,6 +34,8 @@ void init_idt()
     }
     set_idtdesc(idt + 0x20, (int)&inthandler20, 0x08, 0x008e);
     set_idtdesc(idt + 0x21, (int)&inthandler21, 0x08, 0x008e);
+    set_idtdesc(idt + 0x2E, (int)&inthandler2e, 0x08, 0x008e);  //硬盘控制器的中断函数
+
     io_store_idtr(0x7ff, IDT_ADDR);
 }
 

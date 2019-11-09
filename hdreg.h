@@ -93,3 +93,4 @@ void hd_init(void);
 void add_request(int dev, int wr, int blocks, void * buf);
 void test_hard_disk();
 void read_disk(int , void * );
+void write_disk(int , void * );

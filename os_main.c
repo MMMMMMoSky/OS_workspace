@@ -1,4 +1,5 @@
 #include "func_def.h"
+#include "hdreg.h"
 
 struct byte_buffer kb_buf,timer1_buf,timer2_buf,timer3_buf;
 struct timer_queue timer_q;
@@ -19,6 +20,9 @@ void main()  // bochs address: 0x106
     io_out8(PIC0_IMR, 0xf8);  // 打开键盘和定时器中断
 
     io_sti();
+
+    mem_init_all();
+    test_hard_disk();
 
     // start terminal process 
     start_new_terminal();

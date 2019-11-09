@@ -145,7 +145,7 @@ static void hd_out(unsigned int drive,unsigned int nsect,unsigned int sect,
 		unsigned int head,unsigned int cyl,unsigned int cmd,
 		void (*intr_addr)(void))
 {
-	//printf("command:%x\n",cmd);
+	printf("command:%x\n",cmd);
 	register int port asm("dx");
 
 	if (drive>1 || head>15)
@@ -230,6 +230,7 @@ static void read_intr(void)
 	//这里不是很明白为什么输出这么多位
 	//printf("%x",(char)CURRENT->buffer[501]);
 	
+    //printf("sdfasdf");  
 	CURRENT->errors = 0;
 	CURRENT->buffer += 512;
 	CURRENT->sector++;
@@ -259,9 +260,9 @@ static void write_intr(void)
 		port_write(HD_DATA,CURRENT->buffer,256);
 		return;
 	}
-	//printf("write end");
-	//end_request(1);
-	//do_hd_request();
+	printf("write end\n");
+	end_request(1);
+	do_hd_request();
 }
 
 //硬盘中断服务程序中调用的重新校正(复位)函数。
@@ -301,7 +302,7 @@ void do_hd_request()
 
     if (CURRENT->nr_sectors == 0)
 	{
-		//printf("no request");
+		printf("no request");
 		return ;
 	}
 
@@ -372,7 +373,7 @@ void hd_init(void)
 
 void add_request(int dev, int wr, int blocks, void * buf)
 {
-	CURRENT->cmd = READ;//先只用读磁盘调用
+	CURRENT->cmd = wr;//先只用读磁盘调用
 	CURRENT->dev = dev;
 	CURRENT->nr_sectors = 2;
 	CURRENT->sector = blocks << 1; //块号转换为扇区号
@@ -387,7 +388,10 @@ void read_disk(int blocks, void * buf)
     add_request(1, READ, blocks, buf);
 }
 
-void write_disk();
+void write_disk(int b, void * buf)
+{
+    add_request(1, WRITE, b, buf);
+}
 
 void test_hard_disk()
 {
@@ -416,15 +420,29 @@ void test_hard_disk()
 	
 	//读取分区表
 	CURRENT = mem_alloc(sizeof(struct request));
-	char * buf = mem_alloc(1024);
-	add_request(0, 0, 0, buf);
-	printf("%x %x",buf[510], buf[511]);
-	struct partition * p = 0x1BE + (void *)buf;
-	for(int i=1; i<5; i++, p++){
-		hd[i].start_sect = p->start_sect;
-		hd[i].nr_sects = p->nr_sects;
-		printf("start:%d n:%d\n",hd[i].start_sect, hd[i].nr_sects);
-	}
+
+    //读写测试
+    // void * buf = mem_alloc(1024);
+    // *((char *)buf) = 98;
+    // write_disk(1, buf);
+
+    // void * buf2 = mem_alloc(1024);
+    // printf("old buf2:%d\n", *((char *)buf2));
+    // read_disk(1, buf2);
+    // printf("new buf2:%d\n", *((char *)buf2));
+
+    //
+
+	// char * buf = mem_alloc(1024);
+	// add_request(0, 0, 0, buf);
+	// printf("%x %x",buf[510], buf[511]);
+	
+    // struct partition * p = 0x1BE + (void *)buf;
+	// for(int i=1; i<5; i++, p++){
+	// 	hd[i].start_sect = p->start_sect;
+	// 	hd[i].nr_sects = p->nr_sects;
+	// 	printf("start:%d n:%d\n",hd[i].start_sect, hd[i].nr_sects);
+	// }
 
 	//读磁盘检测
 	
