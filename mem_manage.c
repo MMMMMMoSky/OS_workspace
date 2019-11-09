@@ -226,47 +226,53 @@ void *mem_alloc(uint len)
 
 void mem_free(void *obj, uint size)
 {
-    struct _bucket_dir *bdir;
-    struct bucket_desc *bdesc, *prev;
-    for (bdir = bucket_dir; bdir->size; bdir++)
-    {
-        prev = 0;
-        if (bdir->size < size)
-            continue;
-        for (bdesc = bdir->chain; bdesc; bdesc++)
-        {
-            if (bdesc->page = obj)
-                goto found;
-            prev = bdesc;
-        }
-    }
-    printf("bad address!");
-found:
-    io_cli();
-    *((char **)obj) = bdesc->freeptr;
-    bdesc->freeptr = obj;
-    bdesc->refcnt--;
-    if (!bdesc->refcnt)
-    {
-        if (prev->next != bdesc)
-        {
-            for (prev = bdir->chain; prev; prev = prev->next)
-                if (prev->next == bdir)
-                    break;
+    void		*page;
+	struct _bucket_dir	*bdir;
+	struct bucket_desc	*bdesc, *prev;
 
-            if (prev)
-                prev->next = bdesc->next;
-            else
-            {
-                if (bdir->chain != bdesc)
-                    printf("malloc bucket chains corrupted");
-                bdir->chain = bdesc->next;
-            }
-        }
-        mem_freepage((uint)bdesc->page);
-        bdesc->next = free_bucket_desc;
-        free_bucket_desc = bdesc;
-    }
+	/* Calculate what page this object lives in */
+	page = (void *)  ((unsigned long) obj & 0xfffff000);
+	/* Now search the buckets looking for that page */
+	for (bdir = bucket_dir; bdir->size; bdir++) {
+		prev = 0;
+		/* If size is zero then this conditional is always false */
+		if (bdir->size < size)
+			continue;
+		for (bdesc = bdir->chain; bdesc; bdesc = bdesc->next) {
+			if (bdesc->page == page) 
+				goto found;
+			prev = bdesc;
+		}
+	}
+	printf("Bad address passed to kernel free_s()");
+found:
+	io_cli(); /* To avoid race conditions */
+	*((void **)obj) = bdesc->freeptr;
+	bdesc->freeptr = obj;
+	bdesc->refcnt--;
+	if (bdesc->refcnt == 0) {
+		/*
+		 * We need to make sure that prev is still accurate.  It
+		 * may not be, if someone rudely interrupted us....
+		 */
+		if ((prev && (prev->next != bdesc)) ||
+		    (!prev && (bdir->chain != bdesc)))
+			for (prev = bdir->chain; prev; prev = prev->next)
+				if (prev->next == bdesc)
+					break;
+		if (prev)
+			prev->next = bdesc->next;
+		else {
+			if (bdir->chain != bdesc)
+				printf("malloc bucket chains corrupted");
+			bdir->chain = bdesc->next;
+		}
+		mem_freepage((unsigned long) bdesc->page);
+		bdesc->next = free_bucket_desc;
+		free_bucket_desc = bdesc;
+	}
+	io_sti();
+	return;
 }
 
 void mem_print_freebucket()
