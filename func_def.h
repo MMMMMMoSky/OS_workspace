@@ -65,9 +65,6 @@ void set_timer(struct timer *timer, struct byte_buffer *buf, byte data, uint tim
 uint start_new_terminal();
 void running_term();
 
-// implement in hard_disk.c
-void test_hard_disk();
-
 // implement in builtin_commands.c
 void cmd_echo(const char *param);
 void cmd_sleep(const char *param);
