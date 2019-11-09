@@ -16,6 +16,7 @@ void io_store_eflags(int eflags);
 void io_store_idtr(int limit, int addr);
 void inthandler21(void);
 void inthandler20(void);
+void inthandler2e(void);
 
 // implemented in hardware_init.c
 void init_video();
@@ -48,6 +49,7 @@ void memcpy(byte* dst, const byte* src, uint count);
 void *mem_alloc(uint len);
 void mem_free(void *obj, uint size);
 void mem_functest(void);
+void mem_init_all();
 
 // implement in byte_buffer.c
 void init_byte_buffer(struct byte_buffer *buf);
@@ -64,9 +66,6 @@ void set_timer(struct timer *timer, struct byte_buffer *buf, byte data, uint tim
 // implement in terminal.c
 uint start_new_terminal();
 void running_term();
-
-// implement in hard_disk.c
-void test_hard_disk();
 
 // implement in builtin_commands.c
 void cmd_echo(const char *param);

@@ -1,4 +1,4 @@
 floppya: 1_44="./Image", status=inserted            # Use Floppy Disk A for booting
 ata0-master: type=disk, path="./hard_disk_drive"    # add hard disk
 boot: floppy
-display_library: x, options="gui_debug"             # Uncomment this line to enable GUI debugger
+# display_library: x, options="gui_debug"             # Uncomment this line to enable GUI debugger

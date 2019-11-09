@@ -56,5 +56,8 @@ hard_disk_drive:
 run-bochs: Image hard_disk_drive
 	@/usr/bin/bochs
 
+bochs: Image
+	@bochs
+
 clean:
 	@rm -f *.o *.s bootsect setup sys_head kernel system Image hard_disk_drive

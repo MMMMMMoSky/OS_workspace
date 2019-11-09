@@ -11,7 +11,9 @@
 .global io_out8, io_out16, io_out32
 .global io_load_eflags, io_store_eflags
 .global io_store_idtr, inthandler21, inthandler20
-.extern keyboard_intr, handle_IRQ0
+.global io_store_idtr, inthandler21, inthandler20, inthandler2e
+.extern keyboard_intr, handle_IRQ0, hd_intr, unexpected_hd_interrupt, do_hd
+
 
     # call main       # jump to os_main.c main()
     jmp after_page_tables
@@ -165,3 +167,38 @@ inthandler20:
 	popl %ecx
 	popl %eax
 	iret 
+
+
+
+inthandler2e:
+	pushl %eax
+	pushl %ecx
+	pushl %edx
+	push %ds
+	push %es
+	push %fs
+	# movl $0x10,%eax
+	# mov %ax,%ds
+	# mov %ax,%es
+	# movl $0x17,%eax
+	# mov %ax,%fs
+
+	movb $0x20,%al
+	outb %al,$0xA0		# 从8259EOI
+	jmp 1f				# give port chance to breathe
+1:	jmp 1f
+1:	xorl %edx,%edx
+	xchgl do_hd,%edx
+	testl %edx,%edx
+	jne 1f
+	movl $unexpected_hd_interrupt,%edx
+1:	movb $0x62,%al		# 8259EOI
+	outb %al,$0x20
+	call *%edx			# "interesting" way of handling intr.
+	pop %fs
+	pop %es
+	pop %ds
+	popl %edx
+	popl %ecx
+	popl %eax
+	iret
