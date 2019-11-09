@@ -126,6 +126,9 @@ void exec_command(char *cmd_line)
     else if (strcmp(cmd_line, "sleep") == 0) {
         cmd_sleep(param);
     }
+     else if (strcmp(cmd_line, "calc") == 0) {
+        cmd_calc(param);
+    }
     // else if (strcmp(cmd_line, "name") == 0) {
     //     cmd_name(param);
     // }

@@ -74,5 +74,6 @@ void cmd_sleep(const char *param);
 void cmd_clear(const char *param);
 void cmd_num_conv(const char *param);
 void cmd_invalid_cmd(const char *param);
+void cmd_calc(const char*param);
 
 #endif
