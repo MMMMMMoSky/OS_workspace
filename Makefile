@@ -9,6 +9,9 @@ all: Image
 run-qemu: Image hard_disk_drive
 	@qemu-system-i386 -boot a -fda Image -hda hard_disk_drive
 
+run-bochs: Image hard_disk_drive
+	@/usr/bin/bochs
+
 # bootsect
 bootsect.o: bootsect.asm
 	@as --32 bootsect.asm -o bootsect.o
@@ -52,12 +55,6 @@ Image: bootsect setup system
 # make hard disk
 hard_disk_drive:
 	@qemu-img create hard_disk_drive 100M
-
-run-bochs: Image hard_disk_drive
-	@/usr/bin/bochs
-
-bochs: Image
-	@bochs
 
 clean:
 	@rm -f *.o *.s bootsect setup sys_head kernel system Image hard_disk_drive
