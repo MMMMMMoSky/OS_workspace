@@ -594,31 +594,95 @@ void cmd_calc(const char*param)  //computational  expression
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 
-int cd_son(const char *param, struct file_directory_point *nowdf)
-{
-    if (nowdf->fdp->left == 0)
-    {
-        return 0;
+// 移动一步, 从 nowdf 移动一步 dir
+// 返回移动之后的指针, nowdf 不会被改变
+// 不存在则返回 0
+struct file_directory* parse_path_step(const char *dir, uint length, struct file_directory_point *nowdf) {
+    // 1. .
+    if (length == 1 && strncmp(dir, ".", 1) == 0) {
+        return nowdf->fdp;
     }
-    struct file_directory* temdf = nowdf->fdp->left;
-    if (strcmp(temdf->name, param) == 0)
-    {
-        nowdf->fdp = temdf;
-        return 1;
-    } else
-    {
-        while (temdf->right != 0)
-        {
-            temdf = temdf->right;
-            if (strcmp(temdf->name, param) == 0)
-            {
-                nowdf->fdp = temdf;
-                return 1;
-            }
+    // 2. ..
+    if (length == 2 && strncmp(dir, "..", 2) == 0) {
+        if (nowdf->fdp->father) {
+            return nowdf->fdp->father;
         }
-        return 0;
+        else {
+            return nowdf->fdp;
+        }
+    }
+    // 3. child folder
+    for (struct file_directory* p = nowdf->fdp->left; p; p = p->right) {
+        if (strncmp(dir, p->name, length) == 0) {
+            return p;
+        }
+    }
+    return 0;  // do not exist
+}
+
+// 解析路径 (相对路径/绝对路径)
+// path: 路径
+// nowdf: 当前路径
+// olddf: 根目录
+// return: 解析成功则返回成功解析的路径节点, 解析失败则返回0 (NULL)
+// FIXME: 如果是文件呢?
+struct file_directory* parse_path(
+    const char *path,
+    struct file_directory_point *nowdf,
+    struct file_directory_point *olddf
+) {
+
+    // strip spaces
+    uint length = 0;
+    while (*path == ' ') path++;
+    while (path[length]) length++;
+
+    // special judge root dir
+    if (length == 1 && *path == '/') {
+        return olddf->fdp;
+    }
+
+    // strip postfix spaces
+    while (length && path[length - 1] == '/') length--;
+
+    struct file_directory *backup = nowdf->fdp;
+    uint start, end;
+    if (*path == '/') {  // absolute path
+        nowdf->fdp = olddf->fdp;
+        start = end = 1;
+    }
+    else {  // relative path
+        start = end = 0;
+    }
+    for (; end < length; start = ++end) {
+        while (end < length && path[end] != '/') end++;
+        // [start, end), a single path
+        struct file_directory *next = parse_path_step(path + start, end - start, nowdf);
+        if (next == 0) {
+            nowdf->fdp = backup;
+            return 0;
+        }
+        nowdf->fdp = next;
+    }
+    struct file_directory *res = nowdf->fdp;
+    nowdf->fdp = backup;
+    return res;
+}
+
+void cmd_cd(const char *param, struct file_directory_point *nowdf, struct file_directory_point *olddf)
+{
+    struct file_directory *res = parse_path(param, nowdf, olddf);
+    if (res == 0) {
+        prints("Error: invalid path\n");
+    }
+    else if (res->flag == 0) {
+        prints("Error: can not enter a file\n");
+    }
+    else {
+        nowdf->fdp = res;
     }
 }
+
 void cmd_touch(const char *param, struct file_directory_point *nowdf, struct file_directory_point *olddf)
 {
     int i = 0;
@@ -668,67 +732,33 @@ void cmd_ls(struct file_directory_point nowdf)
         printf("%d.%s\n", num++, temp.fdp->name);
     }
 }
-void cmd_cd(const char *param, struct file_directory_point *nowdf, struct file_directory_point *olddf)
+
+void cmd_pwd(struct file_directory_point *nowdf)
 {
-    int i = 0;
-    while (param[i] != '\0')
-    {
-        i++;
-    }
-    int length = i;
-    if (param[length - 1] == 't' && param[length - 2] == 'x' && param[length - 3] == 't' && param[length - 4] == '.')
-    {   //file
-        printf("Error: wrong path\n");
+    // special judge if nowdf is root
+    if (nowdf->fdp->father == 0) {
+        prints("/\n");
         return;
     }
-    if (param[0] == '\0' || strcmp(param, ".") == 0)
-    {
-        *nowdf = *olddf;
-        return;
+
+    int length = 0;
+    char *res = (char*)mem_alloc(4096);
+    struct file_directory *p = nowdf->fdp;
+    for (; p->father; p = p->father) {
+        // 将每一级节点名称倒着复制到 res 中
+        int pname = 0;
+        while (p->name[pname]) pname++;
+        while (pname > 0) res[length++] = p->name[--pname];
+        res[length++] = '/';
     }
-    if (strcmp(param, "..") == 0)
-    {
-        nowdf->fdp = nowdf->fdp->father;
-        return;
+    for (int i = length - 1; i >= 0; i--) {
+        printc(res[i]);
     }
-    i = 0;
-    int b = 0;
-    do
-    {
-        if (param[i + 1] == '/' || param[i + 1] == '\0')
-        {
-            char tempc[i - b + 1];
-            for (int j = 0; j <= i - b; j++)
-                tempc[j] = param[j + b];
-            b = i + 2;
-            if (!cd_son(tempc, nowdf))
-            {   printf("Error: wrong path\n");
-                return;
-            }
-        }
-        i = i + 1;
-    } while (param[i] != '\0');
-    printf("You get in %s sucessfully\n", nowdf->fdp->name);
+    printc('\n');
+
+    mem_free(res, 4096);
 }
-void cmd_tree(int a, struct file_directory_point *nowdf, struct file_directory_point *olddf)
-{
-    if (strcmp(nowdf->fdp->name, olddf->fdp->name) == 0)
-    {
-        if (a == 0)
-            printf("%s\n", nowdf->fdp->name);
-        else
-            printf("%s/", nowdf->fdp->name);
-        return;
-    }
-    struct file_directory_point *temdf;
-    temdf->fdp = nowdf->fdp->father;
-    cmd_tree(a + 1, temdf, olddf);
-    if (a == 0)
-        printf("%s\n", nowdf->fdp->name);
-    else
-        printf("%s/", nowdf->fdp->name);
-    return;
-}
+
 void freeall(struct file_directory* nowdf)
 {
     if (nowdf->right == 0)
@@ -740,6 +770,7 @@ void freeall(struct file_directory* nowdf)
     mem_free(nowdf, sizeof(struct file_directory));
     return;
 }
+
 int rm_son(int sign, const char *param, struct file_directory **nowdf)
 {
     if ((*nowdf)->left == 0)
@@ -779,6 +810,7 @@ int rm_son(int sign, const char *param, struct file_directory **nowdf)
         return 0;
     }
 }
+
 void cmd_rm(const char *param, struct file_directory_point *nowdf)
 {
     if (strcmp(param, "..") == 0)
@@ -810,35 +842,43 @@ void cmd_rm(const char *param, struct file_directory_point *nowdf)
         i = i + 1;
     } while (param[i] != '\0');
 }
+
 void cmd_cat(const char *param, struct file_directory_point *nowdf, struct file_directory_point *olddf)
 {
-    int i = 0;
-    while (param[i] != '\0')
-    {
-        i++;
+    // TODO: 暂不支持多个空格
+    uint length = 0;
+    while (param[length]) length++;
+    char *path = (char*)mem_alloc(length);
+    memcpy(path, param, length);
+    path[length] = 0;
+
+    // find last slash
+    uint slash = length;
+    for (uint i = 0; i < length; i++) {
+        if (path[i] == '/') slash = i;
     }
-    int length = i;
-    if (!(param[length - 1] == 't' && param[length - 2] == 'x' && param[length - 3] == 't' && param[length - 4] == '.'))
-    {   //disposed as a file
-        printf("Error: wrong path\n");
-        return;
+
+    struct file_directory *p = 0;
+    struct file_directory *backup = nowdf->fdp;
+    if (slash == length) { // no slash, param is just a filename
+        p = parse_path_step(path, length, nowdf);
     }
-    i = 0;
-    int b = 0;
-    do
-    {
-        if (param[i + 1] == '/' || param[i + 1] == '\0')
-        {
-            char tempc[i - b + 1];
-            for (int j = 0; j <= i - b; j++)
-                tempc[j] = param[j + b];
-            b = i + 2;
-            if (!cd_son(tempc, nowdf))
-            {   printf("Error: wrong path\n");
-                return;
-            }
+    else {
+        path[slash] = 0;
+        struct file_directory *d;
+        d = parse_path(path, nowdf, olddf);
+        if (d != 0) {
+            nowdf->fdp = d;
+            p = parse_path_step(path + slash + 1, length - slash - 1, nowdf);
         }
-        i = i + 1;
-    } while (param[i] != '\0');
-    printf("You get in %s sucessfully\n", nowdf->fdp->name);
+    }
+    nowdf->fdp = backup;
+    if (p) {
+        printf("%s\n", p->context);
+    }
+    else {
+        printf("Error: invalid file path\n");
+    }
+
+    mem_free(path, length);
 }
