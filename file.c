@@ -17,17 +17,14 @@ void init_home()
     extern struct file_directory home;
     extern struct file_directory_point nowdf;
     extern struct file_directory_point olddf;
-    home.name[0] = 'h';
-    home.name[1] = 'o';
-    home.name[2] = 'm';
-    home.name[3] = 'e';
-    home.name[4] = '\0';
+    home.name[0] = '/';
+    home.name[1] = 0;
     home.left = 0;
     home.right = 0;
     home.father = 0;
     home.flag = 1;
-    nowdf.fdp = &home; //now is home
-    olddf.fdp = &home; //at first they are equal to each other
+    nowdf.fdp = &home; // now is home
+    olddf.fdp = &home; // at first they are equal to each other
 }
 //建一个新的目录，左孩子右兄弟上面是父节点模式
 void create_new_directory(struct file_directory_point *now_directory, char *name)
