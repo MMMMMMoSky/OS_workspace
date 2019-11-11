@@ -143,8 +143,8 @@ void exec_command(char *cmd_line)
     else if (strcmp(cmd_line, "rm") == 0) {
         cmd_rm(param, &nowdf);
     }
-    else if (strcmp(cmd_line, "tree") == 0) {
-        cmd_tree(0, &nowdf, &olddf);
+    else if (strcmp(cmd_line, "pwd") == 0) {
+        cmd_pwd(&nowdf);
     }
     else if (strcmp(cmd_line, "cat") == 0) {
         cmd_cat(param, &nowdf, &olddf);
