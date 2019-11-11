@@ -78,7 +78,7 @@ void cmd_touch(const char *param, struct file_directory_point *now, struct file_
 void cmd_ls(struct file_directory_point now);
 void cmd_cd(const char *param, struct file_directory_point *now, struct file_directory_point *old);
 void cmd_rm(const char *param, struct file_directory_point *now);
-void cmd_tree(int a, struct file_directory_point *now, struct file_directory_point *old);
+void cmd_pwd(struct file_directory_point *now);
 void cmd_cat(const char *param, struct file_directory_point *now, struct file_directory_point *old);
 
 // implement in file.c
