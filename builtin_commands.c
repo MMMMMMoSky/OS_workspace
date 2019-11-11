@@ -181,6 +181,16 @@ void cmd_sleep(const char *param)
     int i = 0;
     int flag = 0;
     int flag2 = 0;
+    if (strcmp(param, " ") == 0 || strcmp(param, "") == 0)
+    {
+        prints("Error: sleep time1 -d time2 and time must be an interger\n");
+        return;
+    }
+    if (strcmp(param, "-h") == 0)
+    {
+        prints("\nsleep\n  using timer implement sleep\nUsage: sleep time or sleep time1 [options] time2\nOPtions:\n -d, -duration    output the time that has sleep at regular intervals\n -h, -help        print this page\ntime: a positive integar\n\n");
+        return;
+    }
     while (param[i] != '\0')
     {
         if (param[i] == '-' && param[i + 1] == 'd')
@@ -202,7 +212,7 @@ void cmd_sleep(const char *param)
             else
             {
                 flag2 = -1;
-                prints("Error: time must be an interger\n");
+                prints("Error: sleep time1 -d time2 and time must be an interger\n");
                 break;
             }
         }
@@ -243,7 +253,7 @@ void cmd_sleep(const char *param)
             else
             {
                 flag2 = -1;
-                prints("Error: sleep time1 -d time2\n");
+                prints("Error: sleep time1 -d time2 and time must be an interger\n");
                 break;
             }
         }
@@ -492,8 +502,8 @@ int cmd_calc_get_error(const char*param, int*calc_answer) //generate criterion
         calc_param[cmd].figure = calc_param[cmd].calc_sym = 0;
         // char  is   +   or  -    or   *   or    /   or    (   or    )
         if (calc_char[calc_cmd]  == '(' || calc_char[calc_cmd] == ')' ||
-            calc_char[calc_cmd] == '+'  || calc_char[calc_cmd] == '-' ||
-            calc_char[calc_cmd]  == '*' || calc_char[calc_cmd] == '/')
+                calc_char[calc_cmd] == '+'  || calc_char[calc_cmd] == '-' ||
+                calc_char[calc_cmd]  == '*' || calc_char[calc_cmd] == '/')
         {
             //printf("test\n");
             switch (calc_char[calc_cmd])
@@ -583,3 +593,252 @@ void cmd_calc(const char*param)  //computational  expression
     }
 }
 ////////////////////////////////////////////////////////////////////////////////////////
+
+int cd_son(const char *param, struct file_directory_point *nowdf)
+{
+    if (nowdf->fdp->left == 0)
+    {
+        return 0;
+    }
+    struct file_directory* temdf = nowdf->fdp->left;
+    if (strcmp(temdf->name, param) == 0)
+    {
+        nowdf->fdp = temdf;
+        return 1;
+    } else
+    {
+        while (temdf->right != 0)
+        {
+            temdf = temdf->right;
+            if (strcmp(temdf->name, param) == 0)
+            {
+                nowdf->fdp = temdf;
+                return 1;
+            }
+        }
+        return 0;
+    }
+}
+void cmd_touch(const char *param, struct file_directory_point *nowdf, struct file_directory_point *olddf)
+{
+    int i = 0;
+    if (nowdf->fdp->flag == 0)
+    {
+        prints("Error: now you are in a file but not a directory\n");
+        return;
+    }
+    while (param[i] != '\0')
+    {
+        i++;
+    }
+    int length = i;
+    if (length > 30)
+    {   printf("wrong name size");
+        return;
+    }
+    //末尾是.txt代表文件
+    if (param[length - 1] == 't' && param[length - 2] == 'x' && param[length - 3] == 't' && param[length - 4] == '.')
+    {   //disposed as a file
+        create_new_file(nowdf, param);
+        prints("create file successfully\n");
+        return;
+    }
+    create_new_directory(nowdf, param);
+    prints("create directory successfully\n");
+}
+void cmd_ls(struct file_directory_point nowdf)
+{
+    if (nowdf.fdp->flag == 0)
+    {
+        prints("Error: now you are in a file but not a directory\n");
+        return;
+    }
+    if (nowdf.fdp->left == 0)
+    {
+        prints("This directory is null\n");
+        return;
+    }
+    struct file_directory_point temp;
+    temp.fdp = nowdf.fdp->left;
+    int num = 1;
+    printf("%d.%s\n", num++, temp.fdp->name);
+    while (temp.fdp->right != 0)
+    {
+        temp.fdp = temp.fdp->right;
+        printf("%d.%s\n", num++, temp.fdp->name);
+    }
+}
+void cmd_cd(const char *param, struct file_directory_point *nowdf, struct file_directory_point *olddf)
+{
+    int i = 0;
+    while (param[i] != '\0')
+    {
+        i++;
+    }
+    int length = i;
+    if (param[length - 1] == 't' && param[length - 2] == 'x' && param[length - 3] == 't' && param[length - 4] == '.')
+    {   //file
+        printf("Error: wrong path\n");
+        return;
+    }
+    if (param[0] == '\0' || strcmp(param, ".") == 0)
+    {
+        *nowdf = *olddf;
+        return;
+    }
+    if (strcmp(param, "..") == 0)
+    {
+        nowdf->fdp = nowdf->fdp->father;
+        return;
+    }
+    i = 0;
+    int b = 0;
+    do
+    {
+        if (param[i + 1] == '/' || param[i + 1] == '\0')
+        {
+            char tempc[i - b + 1];
+            for (int j = 0; j <= i - b; j++)
+                tempc[j] = param[j + b];
+            b = i + 2;
+            if (!cd_son(tempc, nowdf))
+            {   printf("Error: wrong path\n");
+                return;
+            }
+        }
+        i = i + 1;
+    } while (param[i] != '\0');
+    printf("You get in %s sucessfully\n", nowdf->fdp->name);
+}
+void cmd_tree(int a, struct file_directory_point *nowdf, struct file_directory_point *olddf)
+{
+    if (strcmp(nowdf->fdp->name, olddf->fdp->name) == 0)
+    {
+        if (a == 0)
+            printf("%s\n", nowdf->fdp->name);
+        else
+            printf("%s/", nowdf->fdp->name);
+        return;
+    }
+    struct file_directory_point *temdf;
+    temdf->fdp = nowdf->fdp->father;
+    cmd_tree(a + 1, temdf, olddf);
+    if (a == 0)
+        printf("%s\n", nowdf->fdp->name);
+    else
+        printf("%s/", nowdf->fdp->name);
+    return;
+}
+void freeall(struct file_directory* nowdf)
+{
+    if (nowdf->right == 0)
+    {
+        mem_free(nowdf, sizeof(struct file_directory));
+        return;
+    }
+    freeall(nowdf->right);
+    mem_free(nowdf, sizeof(struct file_directory));
+    return;
+}
+int rm_son(int sign, const char *param, struct file_directory **nowdf)
+{
+    if ((*nowdf)->left == 0)
+    {return 0;}
+    struct file_directory* temdf1 = (*nowdf);
+    struct file_directory* temdf2 = (*nowdf)->left;
+    if (strcmp(temdf2->name, param) == 0)
+    {
+        if (sign == 0)
+            *nowdf = temdf2;
+        if (sign == 1)
+        {   //here we can add a note
+            printf("You delete %s sucessfully\n", temdf2->name);
+            temdf1->left = temdf2->right;
+            mem_free(temdf2, sizeof(struct file_directory));
+        }
+        return 1;
+    } else
+    {
+        while (temdf2->right != 0)
+        {
+            temdf1 = temdf2;
+            temdf2 = temdf2->right;
+            if (strcmp(temdf2->name, param) == 0)
+            {
+                if (sign == 1)
+                {
+                    printf("You delete %s sucessfully\n", temdf2->name);
+                    temdf1->right = temdf2->right;
+                    mem_free(temdf2, sizeof(struct file_directory));
+                } else {
+                    *nowdf = temdf2;
+                }
+                return 1;
+            }
+        }
+        return 0;
+    }
+}
+void cmd_rm(const char *param, struct file_directory_point *nowdf)
+{
+    if (strcmp(param, "..") == 0)
+    {
+        freeall(nowdf->fdp->left);
+        nowdf->fdp->left = 0;
+        printf("delete all the content of %s sucessfully\n", nowdf->fdp->name);
+        return;
+    }
+    int i = 0;
+    int b = 0;
+    int sign = 0;
+    struct file_directory *temp = nowdf->fdp;
+    do
+    {
+        if (param[i + 1] == '/' || param[i + 1] == '\0')
+        {
+            if (param[i + 1] == '\0')
+                sign = 1;
+            char tempc[i - b + 1];
+            for (int j = 0; j <= i - b; j++)
+                tempc[j] = param[j + b];
+            b = i + 2;
+            if (!rm_son(sign, tempc, &temp))
+            {   printf("Error: wrong path\n");
+                return;
+            }
+        }
+        i = i + 1;
+    } while (param[i] != '\0');
+}
+void cmd_cat(const char *param, struct file_directory_point *nowdf, struct file_directory_point *olddf)
+{
+    int i = 0;
+    while (param[i] != '\0')
+    {
+        i++;
+    }
+    int length = i;
+    if (!(param[length - 1] == 't' && param[length - 2] == 'x' && param[length - 3] == 't' && param[length - 4] == '.'))
+    {   //disposed as a file
+        printf("Error: wrong path\n");
+        return;
+    }
+    i = 0;
+    int b = 0;
+    do
+    {
+        if (param[i + 1] == '/' || param[i + 1] == '\0')
+        {
+            char tempc[i - b + 1];
+            for (int j = 0; j <= i - b; j++)
+                tempc[j] = param[j + b];
+            b = i + 2;
+            if (!cd_son(tempc, nowdf))
+            {   printf("Error: wrong path\n");
+                return;
+            }
+        }
+        i = i + 1;
+    } while (param[i] != '\0');
+    printf("You get in %s sucessfully\n", nowdf->fdp->name);
+}

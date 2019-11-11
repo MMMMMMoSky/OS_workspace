@@ -83,4 +83,8 @@ typedef char *va_list;
 #define invalidate() \
     __asm__ volatile("mov %%eax, %%cr3" ::"a"(0))
 
+// used in file.c
+#define MAX_CONTEXT_BYTE 300
+#define MAX_NAME_BYTE 30
+
 #endif

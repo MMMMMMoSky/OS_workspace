@@ -12,8 +12,8 @@
 #define RSHIFT_DOWN 0x36
 #define RSHIFT_UP 0xb6
 #define CAP_LOCK 0x3a   // press cap lock, 0x3a 0xba 0x3a 0xba
-#define BACKSPACE_DOWN 0x0e  
-#define BACKSPACE_UP 0x8e  
+#define BACKSPACE_DOWN 0x0e
+#define BACKSPACE_UP 0x8e
 
 uint term_cnt = 0;                 // terminal count
 uint cur_term;                     // current terminal
@@ -22,6 +22,8 @@ byte term_vram[MAX_TERMINAL_CNT][VIDEO_MEM_SIZE]; // when terminal goto backgrou
 uint cmd_len;
 char cmd_buf[1024];  // TODO: current line, inputing, maybe 1024 too small
 extern struct byte_buffer kb_buf;
+extern struct file_directory_point nowdf;
+extern struct file_directory_point olddf;
 
 byte ctrl_down;  // whether control is pressed, default 0, not pressed
 byte shift_down; // whether shift is pressed, default 0, not pressed
@@ -60,7 +62,7 @@ char kb_decode(byte data)
     static const char *qwe_line = "qwertyuiop[]";
     static const char *qwe_line_shift = "QWERTYUIOP{}";
     if (0x10 <= data && data <= 0x1b) {
-        uint idx = data - 0x10; 
+        uint idx = data - 0x10;
         if (idx < 10 && cap_lock) {
             return shift_down ? qwe_line[idx] : qwe_line_shift[idx];
         }
@@ -71,7 +73,7 @@ char kb_decode(byte data)
     static const char *asd_line = "asdfghjkl;'`";
     static const char *asd_line_shift = "ASDFGHJKL:\"~";
     if (0x1e <= data && data <= 0x29) {
-        uint idx = data - 0x1e; 
+        uint idx = data - 0x1e;
         if (idx < 9 && cap_lock) {
             return shift_down ? asd_line[idx] : asd_line_shift[idx];
         }
@@ -82,7 +84,7 @@ char kb_decode(byte data)
     static const char *zxc_line = "\\zxcvbnm,./";
     static const char *zxc_line_shift = "|ZXCVBNM<>?";
     if (0x2b <= data && data <= 0x35) {
-        uint idx = data - 0x2b; 
+        uint idx = data - 0x2b;
         if (1 <= idx && idx < 8 && cap_lock) {
             return shift_down ? zxc_line[idx] : zxc_line_shift[idx];
         }
@@ -112,7 +114,7 @@ void exec_command(char *cmd_line)
 
     // temporaryily change the first space to 0, for strcmp()
     char old = *first_space;
-    *first_space = 0;  
+    *first_space = 0;
 
     if (strcmp(cmd_line, "echo") == 0) {
         cmd_echo(param);
@@ -126,8 +128,26 @@ void exec_command(char *cmd_line)
     else if (strcmp(cmd_line, "sleep") == 0) {
         cmd_sleep(param);
     }
-     else if (strcmp(cmd_line, "calc") == 0) {
+    else if (strcmp(cmd_line, "calc") == 0) {
         cmd_calc(param);
+    }
+    else if (strcmp(cmd_line, "touch") == 0) {
+        cmd_touch(param, &nowdf, &olddf);
+    }
+    else if (strcmp(cmd_line, "ls") == 0) {
+        cmd_ls(nowdf);
+    }
+    else if (strcmp(cmd_line, "cd") == 0) {
+        cmd_cd(param, &nowdf, &olddf);
+    }
+    else if (strcmp(cmd_line, "rm") == 0) {
+        cmd_rm(param, &nowdf);
+    }
+    else if (strcmp(cmd_line, "tree") == 0) {
+        cmd_tree(0, &nowdf, &olddf);
+    }
+    else if (strcmp(cmd_line, "cat") == 0) {
+        cmd_cat(param, &nowdf, &olddf);
     }
     // else if (strcmp(cmd_line, "name") == 0) {
     //     cmd_name(param);
@@ -147,7 +167,7 @@ void running_term()
         return ;
     }
     while (1) {
-        printf("tty%u >> ", cur_term);
+        printf("%s >> ", nowdf.fdp->name);
         while (1) {
             if (kb_buf.length == 0) continue;
             io_cli();

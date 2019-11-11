@@ -48,5 +48,20 @@ struct _bucket_dir
     struct bucket_desc *chain;
 };
 
+//file
+struct file_directory
+{
+    char context[MAX_CONTEXT_BYTE];
+    char name[MAX_NAME_BYTE];
+    struct file_directory *left;
+    struct file_directory *right;
+    struct file_directory *father;
+    int flag;//1 directory;0 file
+};
+
+struct file_directory_point
+{
+    struct file_directory *fdp;
+};
 
 #endif
