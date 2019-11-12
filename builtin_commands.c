@@ -281,315 +281,301 @@ void cmd_sleep(const char *param)
 
 ////////////////////////////////////////////////////////////////
 //cmd_calc
-typedef struct {
-    int figure; int calc_sym;
-} calc_word;
+    typedef struct{
+         int figure;int calc_sym;
+     }calc_word;
 
-int cmd_calc_prog(calc_word* calc_param, int* cmd, int cmd_end)
+int cmd_calc_prog(calc_word* calc_param,int* cmd, int cmd_end)
 {
-    uint E = 0; uint T = 0; uint error = -1;
-    if (*cmd < cmd_end) *cmd += 1;
-    else error = 0;
-    do {
-        if (E == 1) {
-            if (*cmd < cmd_end) *cmd += 1;
-            else error = 0;
+    uint E=0;uint T=0;uint error=-1;
+    do{
+        if(E == 1){
+        if(*cmd<cmd_end) *cmd+=1;
+        else error = 0;
         }
-        E = 1;
-        do {
-            if (T == 1) {
-                if (*cmd < cmd_end) *cmd += 1;
-                else error = 0;
+        E=1;
+        T=0;
+        do{
+            if(T ==1){
+            if(*cmd<cmd_end) *cmd+=1;
+             else error = 0;
             }
-            T = 1;
-            if (calc_param[*cmd - 1].calc_sym == 5) {
-                if (*cmd < cmd_end) *cmd += 1;
-                else error = 0;
+            T=1;
+            if (calc_param[*cmd-1].calc_sym == 5){
+                 if(*cmd<cmd_end) *cmd+=1;
+                 else error = 0;
             }
-            else if (calc_param[*cmd - 1].calc_sym == 6)
-            {
-                if (*cmd < cmd_end) *cmd += 1;
-                else error = 0;
-                cmd_calc_prog(calc_param, cmd, cmd_end);
-                if (calc_param[*cmd - 1].calc_sym == 7) {
-                    if (*cmd < cmd_end) *cmd += 1;
+	        else if(calc_param[*cmd-1].calc_sym == 6 )
+	            {
+                   if(*cmd<cmd_end) *cmd+=1;
                     else error = 0;
-                }
-                else
-                {
-                    printf("test 310\n");
-                    return -1;
-                }
+		            cmd_calc_prog(calc_param,cmd,cmd_end);
+		            if (calc_param[*cmd-1].calc_sym == 7){
+                         if(*cmd<cmd_end) *cmd+=1;
+                         else error = 0;
+                    }
+		            else
+			             {
+                         return -1;
+                         }
+	            }
+	        else{
+		         return -1;
             }
-            else {
-                printf("test 315\n");
-                return -1;
-            }
-        } while (error != 0 && calc_param[*cmd - 1].calc_sym != 3 && calc_param[*cmd - 1].calc_sym != 4);
-    } while (error != 0 && calc_param[*cmd - 1].calc_sym != 1 && calc_param[*cmd - 1].calc_sym != 2);
-    // printf("  this is a test sentence  at 315");
+        }while( calc_param[*cmd-1].calc_sym==3 || calc_param[*cmd-1].calc_sym==4 );
+    }while( calc_param[*cmd-1].calc_sym==1 || calc_param[*cmd-1].calc_sym==2 );
     return error;
 }
 
 //calculate expression
-void cmd_calc_calc(calc_word* calc_param, int*calc_answer, const uint cmd_end)
+void cmd_calc_calc(calc_word* calc_param,int*calc_answer,uint cmd_end)
 {
-    typedef union {
-        char sym;
-        int number;
-    } cmd_stack;
-    //cmd_stack* calc_stack=(cmd_stack*)mem_alloc(cmd_end*1);
-    cmd_stack calc_stack[1024] = {0};
-    uint deep_stack = 0; uint stack_now = 0; uint stack_prep = 0;
-    uint param_cmd = 0; uint houzhui_cmd = 0;
-    //cmd_stack* houzhui=(cmd_stack*)mem_alloc(cmd_end*1);
-    cmd_stack houzhui[1024] = {0};
+     typedef union{
+         char sym;
+         int number;
+     }cmd_stack;
+     //cmd_stack* calc_stack=(cmd_stack*)mem_alloc(cmd_end*1);
+     cmd_stack calc_stack[1024]={0};
+     uint deep_stack=0;uint stack_now=0;uint stack_prep=0;
+     uint param_cmd = 0;uint houzhui_cmd = 0;
+     //cmd_stack* houzhui=(cmd_stack*)mem_alloc(cmd_end*1);
+     cmd_stack houzhui[1024]={0};
 
-    //////////////////////////generate suffix expressions
-    while (param_cmd < cmd_end) {
-        //figure
-        if (calc_param[param_cmd].calc_sym == 5) {
-            houzhui[houzhui_cmd].number = calc_param[param_cmd].figure;
-            param_cmd += 1; houzhui_cmd += 1;
-        }
-        else {
-            //the current stack is empty
-            if (deep_stack == 0) {
-                deep_stack++;
-                if (calc_param[param_cmd].calc_sym == 1) calc_stack[0].sym = '+';
-                if (calc_param[param_cmd].calc_sym == 2) calc_stack[0].sym = '-';
-                if (calc_param[param_cmd].calc_sym == 3) calc_stack[0].sym = '*';
-                if (calc_param[param_cmd].calc_sym == 4) calc_stack[0].sym = '/';
-                if (calc_param[param_cmd].calc_sym == 6) calc_stack[0].sym = '(';
-                if (calc_param[param_cmd].calc_sym == 7) calc_stack[0].sym = ')';
-                param_cmd++;
-            }
-            //the current stack is not empty
-            else {
-                //right parenthesis
-                if (calc_param[param_cmd].calc_sym == 7) {
-                    stack_now = 0;
-                    while (stack_now < deep_stack && calc_stack[stack_now].sym != '(') {
-                        houzhui[houzhui_cmd].sym = calc_stack[stack_now].sym;
-                        houzhui_cmd++; stack_now++;
-                    }
-                    while (stack_prep < (deep_stack - stack_now - 1)) {
-                        calc_stack[stack_prep].sym = calc_stack[stack_prep + stack_now + 1].sym;
-                        stack_prep++;
-                    }
-                    deep_stack -= (stack_now + 1); stack_now = stack_prep = 0;
-                    param_cmd++;
-                }
-                else {
+     //////////////////////////generate suffix expressions
+     while(param_cmd<cmd_end){
+         //figure
+         if(calc_param[param_cmd].calc_sym == 5){
+             houzhui[houzhui_cmd].number=calc_param[param_cmd].figure;
+             param_cmd+=1;houzhui_cmd+=1;
+         }
+         else{
+             //the current stack is empty
+             if(deep_stack == 0){
+                 deep_stack++;
+                 if(calc_param[param_cmd].calc_sym == 1) calc_stack[0].sym = '+';
+                 if(calc_param[param_cmd].calc_sym == 2) calc_stack[0].sym = '-';
+                 if(calc_param[param_cmd].calc_sym == 3) calc_stack[0].sym = '*';
+                 if(calc_param[param_cmd].calc_sym == 4) calc_stack[0].sym = '/';
+                 if(calc_param[param_cmd].calc_sym == 6) calc_stack[0].sym = '(';
+                 if(calc_param[param_cmd].calc_sym == 7) calc_stack[0].sym = ')';
+                 param_cmd++;
+             }
+              //the current stack is not empty
+             else{
+                 //right parenthesis
+                 if(calc_param[param_cmd].calc_sym == 7){
+                     stack_now = 0;
+                     while(stack_now<deep_stack && calc_stack[stack_now].sym!='('){
+                         houzhui[houzhui_cmd].sym=calc_stack[stack_now].sym;
+                         houzhui_cmd++;stack_now++;
+                     }
+                     while(stack_prep<(deep_stack-stack_now-1)){
+                         calc_stack[stack_prep].sym = calc_stack[stack_prep+stack_now+1].sym;
+                         stack_prep++;
+                         }
+                         deep_stack-=(stack_now+1);stack_now=stack_prep=0;
+                         param_cmd++;
+                 }
+                 else{ 
                     //char is not an open parenthesis       &&         priority is not greater than the top of the stack
                     //&&  top of stack is not left parenthesis
-                    while (!(calc_stack[0].sym == '(' ||
-                             ((calc_stack[0].sym == '+' || calc_stack[0].sym == '-')
-                              && (calc_param[param_cmd].calc_sym == 3 || calc_param[param_cmd].calc_sym == 4))
-                             || calc_param[param_cmd].calc_sym == 6)) {
-                        houzhui[houzhui_cmd].sym = calc_stack[0].sym;
-                        houzhui_cmd++;
-                        deep_stack -= 1;
-                        while (stack_prep < deep_stack) {
-                            calc_stack[stack_prep].sym = calc_stack[stack_prep + 1].sym;
-                            stack_prep++;
-                        }
-                        stack_prep = 0;
-                    }
-                    //priority is greater than the top of the stack  OR   char is an open parenthesis
-                    stack_prep = deep_stack; deep_stack++;
-                    while (stack_prep > 0) {
-                        calc_stack[stack_prep] = calc_stack[stack_prep - 1];
-                        stack_prep--;
-                    }
-                    if (calc_param[param_cmd].calc_sym == 1) calc_stack[0].sym = '+';
-                    if (calc_param[param_cmd].calc_sym == 2) calc_stack[0].sym = '-';
-                    if (calc_param[param_cmd].calc_sym == 3) calc_stack[0].sym = '*';
-                    if (calc_param[param_cmd].calc_sym == 4) calc_stack[0].sym = '/';
-                    if (calc_param[param_cmd].calc_sym == 6) calc_stack[0].sym = '(';
-                    if (calc_param[param_cmd].calc_sym == 7) calc_stack[0].sym = ')';
-                    param_cmd++;
-                }
-            }
-        }
-    }
-    while (stack_prep < deep_stack) {
-        houzhui[houzhui_cmd].sym = calc_stack[stack_prep].sym;
-        stack_prep++; houzhui_cmd++;
-    }
-    stack_prep = deep_stack = houzhui_cmd = 0;
-    ////////////////////////computing   suffix  expressions
-    while (houzhui_cmd < cmd_end) {
-        //figure
-        if (houzhui[houzhui_cmd].sym != '+' && houzhui[houzhui_cmd].sym != '-'
-                && houzhui[houzhui_cmd].sym != '*' && houzhui[houzhui_cmd].sym != '/') {
-            stack_prep = deep_stack; deep_stack++;
-            while (stack_prep > 0) {
-                calc_stack[stack_prep].number = calc_stack[stack_prep - 1].number;
-                stack_prep--;
-            }
-            calc_stack[0].number = houzhui[houzhui_cmd].number;
-            houzhui_cmd++; stack_prep = 0;
-        }
-        else {
-            // char is '+'
-            if (houzhui[houzhui_cmd].sym == '+')
-                calc_stack[0].number = calc_stack[1].number + calc_stack[0].number;
-            //char is '-'
-            else if (houzhui[houzhui_cmd].sym == '-')
-                calc_stack[0].number = calc_stack[1].number - calc_stack[0].number;
-            //char is '*'
-            else if (houzhui[houzhui_cmd].sym == '*')
-                calc_stack[0].number = calc_stack[1].number * calc_stack[0].number;
-            //char is '/'
-            else if (houzhui[houzhui_cmd].sym == '/')
-                calc_stack[0].number = calc_stack[1].number / calc_stack[0].number;
-            stack_now = 1; deep_stack--;
-            while (stack_now < deep_stack) {
-                calc_stack[stack_now].number = calc_stack[stack_now + 1].number;
-                stack_now++;
-            }
-            stack_now = 0; houzhui_cmd++;
-        }
-    }
-    *calc_answer = calc_stack[0].number;
-    //printf("  this is a test sentence  445\n");
-    //mem_free(calc_stack,cmd_end);mem_free(houzhui,cmd_end);
+                     while(!(calc_stack[0].sym == '(' || 
+                     ((calc_stack[0].sym == '+'||calc_stack[0].sym == '-')
+                     &&(calc_param[param_cmd].calc_sym == 3 ||calc_param[param_cmd].calc_sym == 4))
+                      || calc_param[param_cmd].calc_sym == 6)){
+                          houzhui[houzhui_cmd].sym=calc_stack[0].sym;
+                          houzhui_cmd++;
+                          deep_stack-=1;
+                          while(stack_prep<deep_stack){
+                              calc_stack[stack_prep].sym=calc_stack[stack_prep+1].sym;
+                              stack_prep++;
+                          }
+                          stack_prep=0;
+                      }
+                      //priority is greater than the top of the stack  OR   char is an open parenthesis
+                      stack_prep = deep_stack;deep_stack++;
+                      while(stack_prep>0){
+                           calc_stack[stack_prep] = calc_stack[stack_prep-1];
+                           stack_prep--;
+                      }
+                       if(calc_param[param_cmd].calc_sym == 1) calc_stack[0].sym = '+';
+                       if(calc_param[param_cmd].calc_sym == 2) calc_stack[0].sym = '-';
+                       if(calc_param[param_cmd].calc_sym == 3) calc_stack[0].sym = '*';
+                       if(calc_param[param_cmd].calc_sym == 4) calc_stack[0].sym = '/';
+                       if(calc_param[param_cmd].calc_sym == 6) calc_stack[0].sym = '(';
+                       if(calc_param[param_cmd].calc_sym == 7) calc_stack[0].sym = ')';
+                       param_cmd++;
+                 }
+             }
+         }
+     }
+     while(stack_prep<deep_stack){
+         houzhui[houzhui_cmd].sym=calc_stack[stack_prep].sym;
+         stack_prep++;houzhui_cmd++;
+     }
+    stack_now= stack_prep=deep_stack=houzhui_cmd=0;
+     ////////////////////////computing   suffix  expressions
+     while(stack_prep<cmd_end){
+         if(calc_param[stack_prep].calc_sym ==6 || calc_param[stack_prep].calc_sym ==7)
+         stack_now++;
+         stack_prep++;
+         }
+         cmd_end=cmd_end-stack_now;
+         stack_prep=stack_now=0;
+
+     while(houzhui_cmd<cmd_end){
+         //figure
+         if(houzhui[houzhui_cmd].sym!='+' && houzhui[houzhui_cmd].sym!='-' 
+         && houzhui[houzhui_cmd].sym!='*' && houzhui[houzhui_cmd].sym!='/'){
+             stack_prep=deep_stack;deep_stack++;
+             while(stack_prep>0){
+                 calc_stack[stack_prep].number=calc_stack[stack_prep-1].number;
+                 stack_prep--;
+             }
+             calc_stack[0].number=houzhui[houzhui_cmd].number;
+             houzhui_cmd++;stack_prep=0;
+         }
+         else{
+         // char is '+'
+         if(houzhui[houzhui_cmd].sym == '+')
+             calc_stack[0].number=calc_stack[1].number+calc_stack[0].number;
+         //char is '-'
+         else if(houzhui[houzhui_cmd].sym == '-')
+              calc_stack[0].number=calc_stack[1].number-calc_stack[0].number;
+         //char is '*'
+         else if(houzhui[houzhui_cmd].sym == '*')
+              calc_stack[0].number=calc_stack[1].number*calc_stack[0].number;
+         //char is '/'
+         else if(houzhui[houzhui_cmd].sym == '/')
+              calc_stack[0].number=calc_stack[1].number/calc_stack[0].number;
+              stack_now=1;deep_stack--;
+              while(stack_now<deep_stack){
+                  calc_stack[stack_now].number=calc_stack[stack_now+1].number;
+                  stack_now++;
+              }
+              stack_now=0;houzhui_cmd++;
+         }
+     }
+     *calc_answer=calc_stack[0].number;
 }
 
-int cmd_calc_get_error(const char*param, int*calc_answer) //generate criterion
+int cmd_calc_get_error(const char*param,int*calc_answer)  //generate criterion
 {
     int calc_error = 0;
     uint cmd = 0;
-    uint calc_cmd = 0;
+    uint calc_cmd=0;
     uint cmd_end = 0;
     //parameter-free
-    if (param[cmd] == 0)
+    if(param[cmd] == 0)
         return -2;
     //parameter is  '-h'
-    else if (param[cmd] == '-' && param[cmd + 1] == 'h') {
-        cmd_end = cmd + 2;
-        while (param[cmd_end] == ' ') cmd_end++;
-        if (param[cmd_end] == 0) return 1;
+    else if(param[cmd] == '-' && param[cmd+1] == 'h'){
+        cmd_end=cmd+2;
+        while(param[cmd_end] == ' ') cmd_end++;
+        if(param[cmd_end] == 0) return 1;
         return -1;
     }
-    //get  effective  length
-    /*while(param[cmd] != '\0'){
-        if(param[cmd] != ' ') cmd_end++;
-        cmd++;
-    }
-    cmd=0;*/
     //generate  a valid string
-    //  动态分配内存的函数出了问题。先使用静态数组   11.08
     //char* calc_char = (char*)mem_alloc((cmd_end+1)*1);
     //calc_char[cmd_end] = 0;
-    char calc_char [1024] = {0};
-    while (param[cmd] != '\0') {
-        if (param[cmd] != ' ') {
+    char calc_char [1024]={0};
+    while(param[cmd] != '\0'){
+        if(param[cmd]!=' '){
             calc_char[cmd_end] = param[cmd];
             cmd_end++;
-        }
-        cmd += 1;
+            }
+        cmd+=1;
     }
-    calc_char[cmd_end] = '\0';
-    calc_cmd = 0;
+    calc_char[cmd_end]='\0';
+    calc_cmd =0;
     cmd = 0;
     //////////////////////////generate  words//////////////////////////////
     //calc_word* calc_param = (calc_word*)mem_alloc(cmd_end*2);
-    calc_word calc_param[1024] = {0};
-    while ( calc_char[calc_cmd] != '\0')
-    {
-        calc_param[cmd].figure = calc_param[cmd].calc_sym = 0;
-        // char  is   +   or  -    or   *   or    /   or    (   or    )
-        if (calc_char[calc_cmd]  == '(' || calc_char[calc_cmd] == ')' ||
-                calc_char[calc_cmd] == '+'  || calc_char[calc_cmd] == '-' ||
-                calc_char[calc_cmd]  == '*' || calc_char[calc_cmd] == '/')
-        {
+    calc_word calc_param[1024]={0};
+     while( calc_char[calc_cmd]!='\0')
+	{
+        calc_param[cmd].figure=calc_param[cmd].calc_sym=0;
+		// char  is   +   or  -    or   *   or    /   or    (   or    )
+		if(calc_char[calc_cmd]  == '(' || calc_char[calc_cmd] == ')' || 
+        calc_char[calc_cmd] == '+'  || calc_char[calc_cmd] == '-' || 
+        calc_char[calc_cmd]  == '*' || calc_char[calc_cmd] == '/'||
+        calc_char[calc_cmd]  == '（' || calc_char[calc_cmd] == '）')
+		{
             //printf("test\n");
-            switch (calc_char[calc_cmd])
-            {
-            case '+':
-                calc_param[cmd].calc_sym = 1;
+			switch (calc_char[calc_cmd])
+			{
+			case '+':
+				calc_param[cmd].calc_sym=1;
+				break;
+			case '-':
+				calc_param[cmd].calc_sym=2;
+				break;
+			case '*':
+				calc_param[cmd].calc_sym=3;
+				break;
+			case '/':
+				calc_param[cmd].calc_sym=4;
+				break;
+			case '(':
+				calc_param[cmd].calc_sym=6;
                 break;
-            case '-':
-                calc_param[cmd].calc_sym = 2;
-                break;
-            case '*':
-                calc_param[cmd].calc_sym = 3;
-                break;
-            case '/':
-                calc_param[cmd].calc_sym = 4;
-                break;
-            case '(':
-                calc_param[cmd].calc_sym = 6;
-                break;
-            case '）':
-                calc_param[cmd].calc_sym = 7;
-                break;
-            }
-            cmd += 1; calc_cmd += 1;
-        }
-        // char is figure
-        else if (calc_char[calc_cmd] >= '0' && calc_char[calc_cmd] <= '9')
-        {
-            //printf("test\n");
-            calc_param[cmd].calc_sym = 5;
-            while (calc_char[calc_cmd] >= '0' && calc_char[calc_cmd] <= '9')
-            {
-                calc_param[cmd].figure = 10 * calc_param[cmd].figure + (calc_char[calc_cmd] - '0');
-                calc_cmd += 1;
-            }
-            cmd += 1;
-        }
-        // other char
-        else
-        {
-            //printf("  this is a test sentence at  535\n");
-            return -1;
-        }
-    }
+			case ')':
+				calc_param[cmd].calc_sym=7;
+				break;
+			}
+            cmd+=1;calc_cmd+=1;
+		}
+		// char is figure 
+		else if(calc_char[calc_cmd] >='0' && calc_char[calc_cmd] <='9')
+		{
+            calc_param[cmd].calc_sym=5;
+			while(calc_char[calc_cmd] >='0' && calc_char[calc_cmd] <='9')
+			{
+				calc_param[cmd].figure=10*calc_param[cmd].figure+(calc_char[calc_cmd]-'0');
+                calc_cmd+=1;
+			}
+            cmd+=1;
+		}
+		// other char
+		else  
+		{
+			return -1;
+		}
+	}
     cmd_end = cmd;
-    cmd = 0;
-    while (cmd < cmd_end - 1) {
-        if (calc_param[cmd].calc_sym == 4 && calc_param[cmd + 1].calc_sym == 5 && calc_param[cmd + 1].figure == 0)
-        {
-            //printf("  this is a test sentence at  543\n");
-            return -1;
-        }
-        //printf("%d    ",calc_param[cmd].figure);
-        cmd += 1;
+    cmd=0;
+    while(cmd<cmd_end-1){
+        if(calc_param[cmd].calc_sym==4 && calc_param[cmd+1].calc_sym==5&&calc_param[cmd+1].figure==0)
+      { 
+       return -1;
+       }
+        cmd+=1;
     }
-    int _cmd = 0;
+    int _cmd=1;
     //////////////////////////////////grammatical   analysis//////////////////////////////
-    calc_error = cmd_calc_prog(calc_param, &_cmd, cmd_end);
-    if (calc_error == 0) cmd_calc_calc(&calc_param, calc_answer, cmd_end);
+    calc_error = cmd_calc_prog(calc_param,&_cmd,cmd_end);
+    if(calc_error == 0) cmd_calc_calc(&calc_param,calc_answer,cmd_end);
     //free memory
-    /*cmd=cmd_end=0;
-    while(param[cmd] != 0){
-        if(param[cmd] != ' ') cmd_end++;
-        cmd++;
-    }
-    mem_free(calc_char,cmd_end+1);mem_free(calc_param,cmd_end);*/
-    return calc_error;
+    return calc_error;     
 }
 
 void cmd_calc(const char*param)  //computational  expression
 {
     //criterion
-    int calc_error = 0;
-    int calc_answer = 0;
-    calc_error = cmd_calc_get_error(param, &calc_answer);
+    int calc_error=0; 
+    int calc_answer=0;
+    calc_error = cmd_calc_get_error(param,&calc_answer);
     //parameter-free
-    if (calc_error == -2)  printf("Error: Parameters are missing\n");
-    //invalid parameter
-    if (calc_error == -1)  printf("Error: invalid expression. Try 'calc -h' for more info\n");
+     if(calc_error == -2)  printf("Error: Parameters are missing\n");
+     //invalid parameter
+    if(calc_error == -1)  printf("Error: invalid expression. Try 'calc -h' for more info\n");
     //valid parameter
-    if (calc_error == 0) printf("the answer is: %d  \n", calc_answer);
+    if(calc_error == 0) printf("the answer is: %d  \n",calc_answer);
     //see the help
-    if (calc_error == 1) {
-        printf(" calc  supports  integer(<=32767)  expression\n");
-        printf(" supported  operations:  +   -   *   /   \n");
-        printf("format:      calc  [expression]\n");
+    if(calc_error == 1){
+       printf(" calc  supports  integer(≤32767)  expression\n");
+       printf(" supported  operations:  +   -   *   /   \n");
+       printf("format:      calc  [expression]\n");
     }
 }
 ////////////////////////////////////////////////////////////////////////////////////////
