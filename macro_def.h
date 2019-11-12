@@ -81,7 +81,7 @@ typedef char *va_list;
 
 //用于使TLB失效, 刷新缓存
 #define invalidate() \
-    __asm__ volatile("mov %%eax, %%cr3" ::"a"(0))
+    __asm__ volatile("mov %%eax, %%cr3" ::"a"(0x70000))
 
 // used in file.c
 #define MAX_CONTEXT_BYTE 300

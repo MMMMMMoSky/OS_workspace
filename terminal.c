@@ -149,6 +149,9 @@ void exec_command(char *cmd_line)
     else if (strcmp(cmd_line, "cat") == 0) {
         cmd_cat(param, &nowdf, &olddf);
     }
+    else if(strcmp(cmd_line, "show") == 0) {
+        cmd_show(param);
+    }
     // else if (strcmp(cmd_line, "name") == 0) {
     //     cmd_name(param);
     // }

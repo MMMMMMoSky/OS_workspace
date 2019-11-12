@@ -1,4 +1,5 @@
 #include "func_def.h"
+#include "hdreg.h"
 
 void cmd_echo(const char *param)
 {
@@ -867,4 +868,33 @@ void cmd_cat(const char *param, struct file_directory_point *nowdf, struct file_
     }
 
     mem_free(path, length);
+}
+
+
+void cmd_show(const char * param)
+{
+    if(!strcmp(param, "hdd")){
+        show_hard_info();
+    }
+    else if(!strcmp(param, "mem")){
+        printf("mem information:\n");
+        mem_printmap();
+    }
+    else if(!strcmp(param, "pg")){
+        printf("page_dir information:\n");
+        mem_calc();
+    }
+    else if(!strcmp(param, "-h")){
+        printf("command: show\n"
+               "summary: show some information of systemn\n"
+               "parameter: [option]\n"
+               "option:\n"
+               " page (show page_dir information)\n"
+               " hdd (show hard disk information)\n"
+               " mem (show memory information)\n"
+        );
+    }
+    else {
+        printf("invalid options\n");
+    }
 }

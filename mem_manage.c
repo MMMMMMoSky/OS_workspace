@@ -35,6 +35,10 @@ void mem_init(int start, int end)
 //根据memmap打印显示哪些页是空闲的, 哪些页是在使用的
 void mem_printmap(void)
 {
+    // for(int i=0;i<2000;i++){
+    //     printf("%d ", mem_map[i]);
+    // }
+    // return;
     int i = 0, j = 0;
     while (j < PAGING_PAGES)
     {
@@ -45,10 +49,12 @@ void mem_printmap(void)
             prints(" to ");
             printi(j - 1);
             prints(" : ");
-            if (mem_map[i] == USED)
+            if (mem_map[i] == 1)
                 prints("used");
-            else
+            else if(mem_map[i] == 0)
                 prints("idle");
+            else
+                printf("uninited"); 
             printc('\n');
             i = j;
         }
@@ -62,11 +68,13 @@ void mem_printmap(void)
     prints(" to ");
     printi(j - 1);
     prints(" : ");
-    if (mem_map[i] == USED)
+    if (mem_map[i] == 1)
         prints("used");
-    else
+    else if(mem_map[i] == 0)
         prints("idle");
-    prints("\n\n");
+    else
+        printf("uninited"); 
+    printc('\n\n');
 }
 
 void mem_calc(void)
@@ -80,7 +88,7 @@ void mem_calc(void)
     printf("%d pages free (of %d in total)\n", free, PAGING_PAGES);
 
     // 遍历除了页表页目录的其余页表项, 如果页面有效, 则统计有效页面数量
-    for (i = 2; i < 1024; i++)
+    for (i = 0; i < 1024; i++)
     {
         if (pg_dir[i] & 1)
         {                                             // 先检查 Dir 是否存在
@@ -92,7 +100,8 @@ void mem_calc(void)
                     k++;
                 }
             }
-            printf("PageDir[%d] uses %d pages\n", i, k);
+            if(i%2==0 && i!=0) printf("\n",i%2);
+            printf("PageDir[%d] uses %d pages  ", i, k);
         }
     }
     printf("\n");

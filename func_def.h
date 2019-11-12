@@ -50,6 +50,11 @@ void *mem_alloc(uint len);
 void mem_free(void *obj, uint size);
 void mem_functest(void);
 void mem_init_all();
+void mem_calc(void);
+void mem_printmap(void);
+void mem_print_bucketdir();
+void mem_print_freebucket();
+
 
 // implement in byte_buffer.c
 void init_byte_buffer(struct byte_buffer *buf);
@@ -80,6 +85,7 @@ void cmd_cd(const char *param, struct file_directory_point *now, struct file_dir
 void cmd_rm(const char *param, struct file_directory_point *now);
 void cmd_pwd(struct file_directory_point *now);
 void cmd_cat(const char *param, struct file_directory_point *now, struct file_directory_point *old);
+void cmd_show(const char * param);
 
 // implement in file.c
 void set_string(struct file_directory *fd, char *name);
