@@ -82,17 +82,17 @@ void cmd_clear(const char *param);
 void cmd_num_conv(const char *param);
 void cmd_invalid_cmd(const char *param);
 void cmd_calc(const char *param);
-void cmd_touch(const char *param, struct file_directory_point *now, struct file_directory_point *old);
-void cmd_ls(struct file_directory_point now);
-void cmd_cd(const char *param, struct file_directory_point *now, struct file_directory_point *old);
-void cmd_rm(const char *param, struct file_directory_point *now);
-void cmd_pwd(struct file_directory_point *now);
-void cmd_cat(const char *param, struct file_directory_point *now, struct file_directory_point *old);
+void cmd_touch(const char *param);
+void cmd_ls();
+void cmd_cd(const char *param);
+void cmd_rm(const char *param);
+void cmd_pwd();
+void cmd_cat(const char *param);
 void cmd_show(const char * param);
 
 // implement in file.c
-void set_string(struct file_directory *fd, char *name);
-void init_home();
+void set_string(struct file_directory *fd, const char *name);
+void init_file_system();
 void create_new_directory(struct file_directory_point *now_directory, char *name);
 void create_new_file(struct file_directory_point *now_directory, char *name);
 

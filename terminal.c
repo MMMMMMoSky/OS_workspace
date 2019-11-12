@@ -22,8 +22,8 @@ byte term_vram[MAX_TERMINAL_CNT][VIDEO_MEM_SIZE]; // when terminal goto backgrou
 uint cmd_len;
 char cmd_buf[1024];  // TODO: current line, inputing, maybe 1024 too small
 extern struct byte_buffer kb_buf;
-extern struct file_directory_point nowdf;
-extern struct file_directory_point olddf;
+extern struct file_directory path_root;  // root
+extern struct file_directory *path_now;  // file system path now
 
 byte ctrl_down;  // whether control is pressed, default 0, not pressed
 byte shift_down; // whether shift is pressed, default 0, not pressed
@@ -132,22 +132,22 @@ void exec_command(char *cmd_line)
         cmd_calc(param);
     }
     else if (strcmp(cmd_line, "touch") == 0) {
-        cmd_touch(param, &nowdf, &olddf);
+        cmd_touch(param);
     }
     else if (strcmp(cmd_line, "ls") == 0) {
-        cmd_ls(nowdf);
+        cmd_ls();
     }
     else if (strcmp(cmd_line, "cd") == 0) {
-        cmd_cd(param, &nowdf, &olddf);
+        cmd_cd(param);
     }
     else if (strcmp(cmd_line, "rm") == 0) {
-        cmd_rm(param, &nowdf);
+        cmd_rm(param);
     }
     else if (strcmp(cmd_line, "pwd") == 0) {
-        cmd_pwd(&nowdf);
+        cmd_pwd();
     }
     else if (strcmp(cmd_line, "cat") == 0) {
-        cmd_cat(param, &nowdf, &olddf);
+        cmd_cat(param);
     }
     else if(strcmp(cmd_line, "show") == 0) {
         cmd_show(param);
@@ -170,7 +170,7 @@ void running_term()
         return ;
     }
     while (1) {
-        printf("%s >> ", nowdf.fdp->name);
+        printf("%s >> ", path_now->name);
         while (1) {
             if (kb_buf.length == 0) continue;
             io_cli();
