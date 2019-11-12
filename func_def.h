@@ -44,6 +44,7 @@ void printhex(uint ui);            // print hex of unsigned integer
 void prints(const char *s);        // print string
 void printn(float n);              // print float
 void printf(const char *fmt, ...); // supports %s %c %d %x %u %f
+void getline(char *line, int max_len);  // read line
 byte strcmp(const char *lhs, const char *rhs);  // compare two strings, if equal return 0
 byte strncmp(const char *lhs, const char *rhs, uint length); // compare first length char of two strings
 
