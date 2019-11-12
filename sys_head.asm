@@ -12,6 +12,7 @@
 .global io_load_eflags, io_store_eflags
 .global io_store_idtr, inthandler21, inthandler20
 .global io_store_idtr, inthandler21, inthandler20, inthandler2e
+.global farjmp, load_tr
 .extern keyboard_intr, handle_IRQ0, hd_intr, unexpected_hd_interrupt, do_hd
 
 
@@ -220,3 +221,12 @@ inthandler2e:
 	popl %ecx
 	popl %eax
 	iret
+
+
+load_tr:
+	ltr 	4(%esp)
+	ret
+
+farjmp:
+	ljmp	4(%esp)
+	ret
