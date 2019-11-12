@@ -64,4 +64,14 @@ struct file_directory_point
     struct file_directory *fdp;
 };
 
+struct terminal{
+    int flag;
+    int cmd_len;
+    char cmd_buf[1024];
+    byte * term_vram;
+    int x;
+    int y;
+    int pid;
+};
+
 #endif

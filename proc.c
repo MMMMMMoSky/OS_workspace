@@ -100,7 +100,13 @@ int time_to_switch;
 extern struct byte_buffer kb_buf;
 struct lock lock_kb;
 struct lock lock_video;
+extern unsigned int video_mem;
+extern uint cursor_x, cursor_y;
+extern struct terminal * terminal_table[MAX_TERMINAL_CNT] ;
+extern uint cur_term;   
 
+struct proc_struct_simple proc_arr[MAX_PROCS];
+int current;
 
 void main_b()
 {
@@ -141,10 +147,10 @@ void main_a()
 void wait_key()
 {
     printf("wait input");
-    while(1){
-        //byte data = get_byte_buffer(&kb_buf);  // 可以优化, 一次取多个
+    while(1){ 
         if(kb_buf.length!=0) 
         {
+            // /byte data = get_byte_buffer(&kb_buf);  // 可以优化, 一次取多个
             break;
         }
     }
@@ -155,18 +161,16 @@ void initFirstProc()
     //初始化所有任务的描述符以及tss段
     for(int i=0;i<MAX_PROCS;i++){
         proc_arr[i].selector = (i+10)*8;
-        proc_arr[i].used = 0;
+        proc_arr[i].state = STA_END;
 
         proc_arr[i].tss.cr3 = 0x70000;
         proc_arr[i].tss.ldt = 0;
         proc_arr[i].tss.trace_bitmap = 0x40000000;
         setTssDesc((i+10), &(proc_arr[i].tss));
         //setLdtDesc((2*i+11), &(proc_arr[i].ldt));
-        proc_arr[i].state = 0;
     }
 
-    proc_arr[0].used = 1;
-    proc_arr[0].state = 1;
+    proc_arr[0].state = STA_WAKE;
     proc_arr[0].next = 0;
     proc_arr[0].prev = 0;
     proc_arr[0].priority = 1;
@@ -179,7 +183,7 @@ void initFirstProc()
 int find_proc()
 {
     for(int i=0;i<MAX_PROCS;i++){
-        if(proc_arr[i].used==1)
+        if(proc_arr[i].state!=STA_END)
             continue;
         else
             return i; 
@@ -214,12 +218,13 @@ int new_proc(unsigned int addr, int priority)
     //关键是堆栈的设置
     proc_arr[i].tss.esp = 0x1000000 + 0x10000*(i+1);
 
-    proc_arr[i].used = 1;
+    proc_arr[i].state = STA_SLEEP;
     proc_arr[i].next = proc_arr[current].next;
     proc_arr[current].next = i;
     proc_arr[i].prev = current;
     proc_arr[proc_arr[i].next].prev = i;
 
+    proc_arr[i].video_mem = VIDEO_MEM;
     return i;
 }
 
@@ -234,17 +239,42 @@ void kill_proc(int i)
     int n = proc_arr[i].next;
     proc_arr[p].next = n;
     proc_arr[n].prev = p;
-    proc_arr[i].used = 0;
+    proc_arr[i].state = STA_END;
     io_sti();
 }
 
+void awaken(int i)
+{
+    if(i>=MAX_PROCS || i<=0) {
+        printf("error awaken");
+        for(;;);
+    }
+    proc_arr[i].state = STA_WAKE;
+}
+
+
 void switch_proc()
 {
-    int j = proc_arr[current].next;
+    //效率感觉太低了，先不管优化了
+    int j = current;
+    int t = proc_arr[current].term;
+    terminal_table[t]->x = cursor_x;
+    terminal_table[t]->y = cursor_y;
+    while(1){
+        j = proc_arr[current].next;
+        if(proc_arr[j].state==STA_WAKE)
+            break;
+    }
     if(j!=current) {
         current = j;
-        time_to_switch = proc_arr[current].priority*100;
-        //printf("%d\n", current);
+        time_to_switch = proc_arr[current].priority*10;
+        //wait_key();
+        video_mem = proc_arr[current].video_mem;
+        int term = proc_arr[current].term;
+        cursor_x = terminal_table[term]->x;
+        cursor_y = terminal_table[term]->y;
+        cur_term = term;
+
         farjmp(0, proc_arr[j].selector);
     }
     else {
@@ -281,14 +311,13 @@ xchg(volatile uint *addr, uint newval)
 int get_lock(struct lock * lk)
 {   
     if(holding(lk)){
-        printf("error");
-        for(;;);
+        return 1;
     }
-    printf("%d",lk->locked);
+    //printf("%d",lk->locked);
 
     while(xchg(&lk->locked,1)!=0);
     __sync_synchronize();
-    printf("%d",lk->locked);
+    //printf("%d",lk->locked);
 
     lk->pid = current;
     return 1;
@@ -308,23 +337,35 @@ void release_lock(struct lock * lk)
 void show_proc()
 {
     for(int i=0;i<MAX_PROCS;i++){
-        if(proc_arr[i].used=1)
+        if(proc_arr[i].state!=STA_END)
             printf("%d.next = %d .prev = %d  ",i,proc_arr[i].next,proc_arr[i].prev);
     }
+}
+
+void exec(int i)
+{
+    current = i;
+    time_to_switch = proc_arr[current].priority*100;
+    video_mem = proc_arr[current].video_mem;
+    int t = proc_arr[current].term;
+    cur_term = t;
+    cursor_x = terminal_table[t]->x;
+    cursor_y = terminal_table[t]->y;
+    farjmp(0, proc_arr[i].selector);
+    io_sti();
 }
 
 void init_proc()
 {
     initFirstProc();
     init_lock();
-    int b,a;
-    if(b = new_proc(main_b, 100))
-        printf("success b\n");
-    if(a = new_proc(main_a,100))
-        printf("success a\n");
-    show_proc();
-    
+    // int b,a;
+    // if(b = new_proc(main_b, 100))
+    //     printf("success b\n");
+    // if(a = new_proc(main_a,100))
+    //     printf("success a\n");
+    // show_proc();
 
     //for(int i=0;;i++) if(i%100000==0)printf("%d ",proc_arr[current].priority);
-    for(;;);
+    //for(;;);
 }

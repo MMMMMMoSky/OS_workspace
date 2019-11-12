@@ -72,10 +72,12 @@ struct desc_struct{
 // 	struct tss_struct tss;
 // };
 
-
+#define STA_SLEEP 0
+#define STA_WAKE  1
+#define STA_START 2
+#define STA_END   3
 struct proc_struct_simple
 {
-	int used;
 	int state;
 	int priority;
 	int selector;
@@ -83,6 +85,8 @@ struct proc_struct_simple
 	struct tss_struct tss;
 	int next;
 	int prev;
+	unsigned int video_mem;
+	int term;
 };
 
 struct lock
@@ -91,15 +95,15 @@ struct lock
     int pid;
 };
 
-struct proc_struct_simple proc_arr[MAX_PROCS];
-int current;
-
 void init_proc();
 void wait_key();
 void switch_proc();
 void initFirstProc();
 int new_proc(unsigned int addr, int priority);
-void kill_proc(int i);
+void kill_proc(int pid);
 int get_lock(struct lock * lk);
 void release_lock(struct lock * lk);
+void awaken(int pid);
+void show_proc();
+void exec(int i);
 

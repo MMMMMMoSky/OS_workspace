@@ -6,6 +6,8 @@ struct byte_buffer kb_buf,timer1_buf,timer2_buf,timer3_buf;
 struct timer_queue timer_q;
 struct timer timer1,timer2,timer3;
 char routine[MAX_CONTEXT_BYTE];
+extern struct proc_struct_simple proc_arr[MAX_PROCS];
+extern unsigned int video_mem, cursor_x, cursor_y;
 
 void main()  // bochs address: 0x106
 {
@@ -22,9 +24,9 @@ void main()  // bochs address: 0x106
     init_hard_disk();
     init_file_system();
 
-    // start terminal process 
-    start_new_terminal();
-    initFirstProc();
+    init_proc();
+    init_terminal_table();
+    
     int term_proc = new_proc(running_term, 10);
     if (term_proc == 0) {
         printf("Error: failed to start new process.\n");
@@ -32,9 +34,10 @@ void main()  // bochs address: 0x106
         goto loop;
     }
 
-    //for(int i=0;;i++) if(i%100000==0)printf("%d ",proc_arr[current].priority);
+    proc_arr[term_proc].term = get_new_terminal();
+    switch_terminal(proc_arr[term_proc].term);
+    awaken(term_proc);
     
-
     io_sti();
 loop:
     __asm__("nop\n\t");

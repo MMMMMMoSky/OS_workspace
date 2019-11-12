@@ -75,6 +75,9 @@ void set_timer(struct timer *timer, struct byte_buffer *buf, byte data, uint tim
 // implement in terminal.c
 uint start_new_terminal();
 void running_term();
+void init_terminal_table();
+void switch_terminal(uint target);
+uint get_new_terminal();
 
 // implement in builtin_commands.c
 void cmd_echo(const char *param);
@@ -91,6 +94,7 @@ void cmd_rm(const char *param);
 void cmd_pwd();
 void cmd_cat(const char *param);
 void cmd_show(const char * param);
+void cmd_term(const char * param);
 
 // implement in file.c
 void set_string(struct file_directory *fd, const char *name);

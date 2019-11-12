@@ -1,6 +1,11 @@
 #include "func_def.h"
+#include "proc.h"
 
+unsigned int video_mem = VIDEO_MEM;
 uint cursor_x, cursor_y;
+extern struct proc_struct_simple proc_arr[MAX_PROCS];
+extern int current;
+extern uint cur_term;  
 
 void v_backspace()
 {
@@ -13,6 +18,8 @@ void v_backspace()
         cursor_x--;
     }
     v_putchar_at(0, cursor_x, cursor_y, 0x0f);
+    if(proc_arr[current].term==cur_term)
+        v_move_cursor(cursor_x, cursor_y);
 }
 
 void v_putchar(char ch)
@@ -39,17 +46,17 @@ void v_putchar(char ch)
         cursor_y = VIDEO_Y_SZ - 1;
     }
 
-    v_move_cursor(cursor_x, cursor_y);
+    if(proc_arr[current].term==cur_term)
+        v_move_cursor(cursor_x, cursor_y);
 }
 
 void v_putchar_at(char ch, uint x, uint y, uint color)
 {
     x = x < VIDEO_X_SZ ? x : VIDEO_X_SZ - 1;
     y = y < VIDEO_Y_SZ ? y : VIDEO_Y_SZ - 1;
-    char *pos = (char *)(VIDEO_MEM + (x + y * VIDEO_X_SZ) * 2);
+    char *pos = (char *)(video_mem + (x + y * VIDEO_X_SZ) * 2);
     *pos = ch;
     *(pos + 1) = color & 0xff;
-    v_move_cursor(x, y);
 }
 
 void v_clear()
@@ -81,8 +88,8 @@ void v_roll_screen()
     for (int i = 1; i < VIDEO_Y_SZ; i++)
     {
         memcpy(
-            (byte*)(VIDEO_MEM + (i - 1) * VIDEO_X_SZ * 2), 
-            (byte*)(VIDEO_MEM + i * VIDEO_X_SZ * 2), 
+            (byte*)(video_mem + (i - 1) * VIDEO_X_SZ * 2), 
+            (byte*)(video_mem + i * VIDEO_X_SZ * 2), 
             VIDEO_X_SZ * 2
         );
     }
