@@ -170,6 +170,7 @@ void exec_command(char *cmd_line)
     }
     else if(strcmp(cmd_line, "term") == 0) {
         int t_para = param[0]-'0';
+        if(t_para==cur_term) return;
         io_cli();
         if(terminal_table[t_para]->flag == 0)//创建新终端
         {
