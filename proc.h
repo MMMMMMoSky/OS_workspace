@@ -82,13 +82,24 @@ struct proc_struct_simple
 	struct desc_struct ldt[3];
 	struct tss_struct tss;
 	int next;
+	int prev;
 };
 
+struct lock
+{
+    int locked;
+    int pid;
+};
 
 struct proc_struct_simple proc_arr[MAX_PROCS];
 int current;
 
-void test_proc();
+void init_proc();
 void wait_key();
 void switch_proc();
+void initFirstProc();
+int new_proc(unsigned int addr, int priority);
+void kill_proc(int i);
+int get_lock(struct lock * lk);
+void release_lock(struct lock * lk);
 

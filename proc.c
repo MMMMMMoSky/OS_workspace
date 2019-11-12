@@ -96,20 +96,47 @@ void sched_init(void)
 
 //上面的代码不要使用
 
+int time_to_switch;
+extern struct byte_buffer kb_buf;
+struct lock lock_kb;
+struct lock lock_video;
+
 
 void main_b()
 {
+    printf("bbbbbbbbbbb");  
     for(int i=0;;i++)
     {
-        if(i%100000==0)
-        {
-            printf("%d ",proc_arr[current].priority);
+        if(get_lock(&lock_kb))
+            printf("get lock\n");
+        
+        while(1){
+            if (kb_buf.length == 0) continue;
+            io_cli();
+            byte data = get_byte_buffer(&kb_buf);  // 可以优化, 一次取多个
+            io_sti();
+            printf("%d", data);
         }
     }
 }
 
-int time_to_switch;
-extern struct byte_buffer kb_buf;
+void main_a()
+{
+    printf("aaaaaaaaaaa");
+    for(int i=0;;i++)
+    {
+        if(get_lock(&lock_kb))
+            printf("get lock\n");
+        while(1){
+            if (kb_buf.length == 0) continue;
+            io_cli();
+            byte data = get_byte_buffer(&kb_buf);  // 可以优化, 一次取多个
+            io_sti();
+            printf("%d",data);
+        }
+    }
+}
+
 
 void wait_key()
 {
@@ -141,6 +168,7 @@ void initFirstProc()
     proc_arr[0].used = 1;
     proc_arr[0].state = 1;
     proc_arr[0].next = 0;
+    proc_arr[0].prev = 0;
     proc_arr[0].priority = 1;
     time_to_switch = proc_arr[0].priority*1000;
     //加载第一个tss的选择符
@@ -185,14 +213,29 @@ int new_proc(unsigned int addr, int priority)
 
     //关键是堆栈的设置
     proc_arr[i].tss.esp = 0x1000000 + 0x10000*(i+1);
+
+    proc_arr[i].used = 1;
     proc_arr[i].next = proc_arr[current].next;
     proc_arr[current].next = i;
+    proc_arr[i].prev = current;
+    proc_arr[proc_arr[i].next].prev = i;
+
     return i;
 }
 
 void kill_proc(int i)
 {
-
+    if(i==0){
+        printf("kill error");
+        for(;;);
+    }
+    io_cli();
+    int p = proc_arr[i].prev;
+    int n = proc_arr[i].next;
+    proc_arr[p].next = n;
+    proc_arr[n].prev = p;
+    proc_arr[i].used = 0;
+    io_sti();
 }
 
 void switch_proc()
@@ -201,7 +244,7 @@ void switch_proc()
     if(j!=current) {
         current = j;
         time_to_switch = proc_arr[current].priority*100;
-        //printf("%d", time_to_switch);
+        printf("%d\n", current);
         farjmp(0, proc_arr[j].selector);
     }
     else {
@@ -211,18 +254,10 @@ void switch_proc()
     }
 }
 
-struct lock
-{
-    int locked;
-    int pid;
-};
-
-struct lock lock_key;
-struct lock lock_video;
 
 void init_lock()
 {
-    lock_key.locked = 0;
+    lock_kb.locked = 0;
     lock_video.locked = 0;
 }
 
@@ -249,22 +284,47 @@ int get_lock(struct lock * lk)
         printf("error");
         for(;;);
     }
-    
+    printf("%d",lk->locked);
+
     while(xchg(&lk->locked,1)!=0);
     __sync_synchronize();
+    printf("%d",lk->locked);
 
     lk->pid = current;
+    return 1;
 }
 
-void test_proc()
+void release_lock(struct lock * lk)
+{
+    if(!holding(lk)){
+        printf("release error");
+        for(;;);
+    }
+
+    __sync_synchronize();
+    asm volatile("movl $0, %0" : "+m" (lk->locked) : );
+}
+
+void show_proc()
+{
+    for(int i=0;i<MAX_PROCS;i++){
+        if(proc_arr[i].used=1)
+            printf("%d.next = %d .prev = %d  ",i,proc_arr[i].next,proc_arr[i].prev);
+    }
+}
+
+void init_proc()
 {
     initFirstProc();
-    int i;
-    if(i = new_proc(main_b, 10))
-    {
-        printf("success");
-    };
+    init_lock();
+    int b,a;
+    if(b = new_proc(main_b, 100))
+        printf("success b\n");
+    if(a = new_proc(main_a,100))
+        printf("success a\n");
+    show_proc();
+    
 
-    for(int i=0;;i++) if(i%100000==0)printf("%d ",proc_arr[current].priority);
+    //for(int i=0;;i++) if(i%100000==0)printf("%d ",proc_arr[current].priority);
     for(;;);
 }
