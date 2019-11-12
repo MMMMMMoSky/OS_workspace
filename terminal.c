@@ -25,6 +25,9 @@ extern struct byte_buffer kb_buf;
 extern struct file_directory path_root;  // root
 extern struct file_directory *path_now;  // file system path now
 
+extern struct lock lock_kb;
+extern struct lock lock_video;
+
 byte ctrl_down;  // whether control is pressed, default 0, not pressed
 byte shift_down; // whether shift is pressed, default 0, not pressed
 byte cap_lock;   // whether capital lock is opened, default 0, closed
