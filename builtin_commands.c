@@ -783,76 +783,66 @@ void freeall(struct file_directory* nowdf)
     return;
 }
 
-int rm_son(int sign, const char *param, struct file_directory **nowdf)
+void cmd_rm_help()
 {
-    // if ((*nowdf)->left == 0)
-    // {return 0;}
-    // struct file_directory* temdf1 = (*nowdf);
-    // struct file_directory* temdf2 = (*nowdf)->left;
-    // if (strcmp(temdf2->name, param) == 0)
-    // {
-    //     if (sign == 0)
-    //         *nowdf = temdf2;
-    //     if (sign == 1)
-    //     {   //here we can add a note
-    //         printf("You delete %s sucessfully\n", temdf2->name);
-    //         temdf1->left = temdf2->right;
-    //         mem_free(temdf2, sizeof(struct file_directory));
-    //     }
-    //     return 1;
-    // } else
-    // {
-    //     while (temdf2->right != 0)
-    //     {
-    //         temdf1 = temdf2;
-    //         temdf2 = temdf2->right;
-    //         if (strcmp(temdf2->name, param) == 0)
-    //         {
-    //             if (sign == 1)
-    //             {
-    //                 printf("You delete %s sucessfully\n", temdf2->name);
-    //                 temdf1->right = temdf2->right;
-    //                 mem_free(temdf2, sizeof(struct file_directory));
-    //             } else {
-    //                 *nowdf = temdf2;
-    //             }
-    //             return 1;
-    //         }
-    //     }
-    //     return 0;
-    // }
+    prints(
+        "\n"
+        "rm\n"
+        "  remove file/directory in file system\n"
+        "Usage: rm [option] path\n"
+        "Options:\n"
+        "  -r, -recursion   remove directory\n"
+        "  -h, -help        print this page\n"
+        "path: absolute or relative path of file/directory\n"
+        "Notice: 1. 'rm -r /' will remove all file in root directory\n"
+        "           but will not remove the root directory itself\n"
+        "        2. if current path is in the folder to remove, it will be reset to root\n"
+        "\n"
+    ); 
 }
 
 void cmd_rm(const char *param)
 {
-    // if (strcmp(param, "..") == 0)
-    // {
-    //     freeall(nowdf->fdp->left);
-    //     nowdf->fdp->left = 0;
-    //     printf("delete all the content of %s sucessfully\n", nowdf->fdp->name);
-    //     return;
-    // }
-    // int i = 0;
-    // int b = 0;
-    // int sign = 0;
-    // struct file_directory *temp = nowdf->fdp;
-    // do
-    // {
-    //     if (param[i + 1] == '/' || param[i + 1] == '\0')
-    //     {
-    //         if (param[i + 1] == '\0')
-    //             sign = 1;
-    //         char tempc[i - b + 1];
-    //         for (int j = 0; j <= i - b; j++)
-    //             tempc[j] = param[j + b];
-    //         b = i + 2;
-    //         if (!rm_son(sign, tempc, &temp))
-    //         {   printf("Error: wrong path\n");
-    //             return;
-    //         }
-    //     }
-    //     i = i + 1;
-    // } while (param[i] != '\0');
+    // 1. parse option
+    int length = 0;
+    char path[1024];
+    byte option_r = 0;
+    while (*param) {
+        while (*param == ' ') param++;
+        if (strncmp(param, "-h", 2) == 0 || strncmp(param, "-help", 5) == 0) {
+            cmd_rm_help();
+            return;
+        }
+        if (strncmp(param, "-r", 2) == 0 && (param[2] == 0 || param[2] == ' ')) {
+            option_r = 1;
+            param += 2;
+            continue;
+        }
+        if (strncmp(param, "-recursion", 10) == 0 && (param[10] == 0 || param[10] == ' ')) {
+            option_r = 1;
+            param += 10;
+            continue;
+        }
+        while (*param && *param != ' ') path[length++] = *param++;
+        path[length] = 0;
+    }
+
+    // 2. try to find file/directory
+    struct file_directory *p;
+    p = parse_path(path, path_now);
+    if (p == 0) {
+        printf("Error: invalid path.\n");
+        return ;
+    }
+    if (p->flag != option_r) {
+        printf("Error: can not remove a directory without -r or remove a file with -r\n");
+        printf("Try 'rm -h' for more information\n");
+        return;
+    }
+
+    // 3. call file system's remove function
+    if (option_r) remove_directory(p);
+    else remove_file(p);
 }
 
 void cmd_cat(const char *param)

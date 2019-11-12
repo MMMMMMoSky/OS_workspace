@@ -94,6 +94,8 @@ void cmd_show(const char * param);
 // implement in file.c
 void set_string(struct file_directory *fd, const char *name);
 void init_file_system();
+void remove_file(struct file_directory *p);
+void remove_directory(struct file_directory *p);
 struct file_directory* create_new_directory(struct file_directory *path, const char *name);
 struct file_directory* create_new_file(struct file_directory *path, const char *name);
 
