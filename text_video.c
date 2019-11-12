@@ -49,6 +49,7 @@ void v_putchar_at(char ch, uint x, uint y, uint color)
     char *pos = (char *)(VIDEO_MEM + (x + y * VIDEO_X_SZ) * 2);
     *pos = ch;
     *(pos + 1) = color & 0xff;
+    v_move_cursor(x, y);
 }
 
 void v_clear()

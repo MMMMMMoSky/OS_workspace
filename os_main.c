@@ -28,17 +28,16 @@ void main()  // bochs address: 0x106
     start_new_terminal();
     initFirstProc();
     int term_proc = new_proc(running_term, 10);
-    if (test_proc == 0) {
+    if (term_proc == 0) {
         printf("Error: failed to start new process.\n");
         printf("Try reboot or FIIIIIIIIIX BUG.\n");
         goto loop;
     }
 
+    //for(int i=0;;i++) if(i%100000==0)printf("%d ",proc_arr[current].priority);
+    
+
     io_sti();
-
-    // jump to terminal process
-    farjmp(0, proc_arr[term_proc].selector);
-
 loop:
     __asm__("nop\n\t");
     goto loop;
