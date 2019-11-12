@@ -1,5 +1,6 @@
 #include "func_def.h"
 #include "hdreg.h"
+#include "proc.h"
 
 struct byte_buffer kb_buf,timer1_buf,timer2_buf,timer3_buf;
 struct timer_queue timer_q;
@@ -26,6 +27,8 @@ void main()  // bochs address: 0x106
     init_home();
 
     io_sti();
+
+    test_proc();
 
     // start terminal process 
     start_new_terminal();

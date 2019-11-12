@@ -17,6 +17,9 @@ void io_store_idtr(int limit, int addr);
 void inthandler21(void);
 void inthandler20(void);
 void inthandler2e(void);
+void farjmp(int eip, int cs);
+void load_tr(int tr);
+
 
 // implemented in hardware_init.c
 void init_video();

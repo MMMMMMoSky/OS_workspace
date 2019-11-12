@@ -3,7 +3,7 @@ CC = gcc
 CFLAGS = -m32 -fomit-frame-pointer -fno-pie -fno-stack-protector -nostdlib -fno-builtin
 C_OBJS = os_main.o mem_manage.o hardware_init.o text_video.o \
 	console_io.o byte_buffer.o time.o terminal.o hard_disk.o \
-	builtin_commands.o file.o
+	builtin_commands.o file.o proc.o
 LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null | head -n 1)
 
 all: Image
@@ -57,6 +57,12 @@ Image: bootsect setup system
 # make hard disk
 hard_disk_drive:
 	@qemu-img create hard_disk_drive 100M
+
+bochs: Image hard_disk_drive
+	@bochs 
+
+b:	Image hard_disk_drive
+	@/usr/bin/bochs
 
 clean:
 	@rm -f *.o *.s bootsect setup sys_head kernel system Image hard_disk_drive
