@@ -32,21 +32,39 @@ L6:
 					# just in case, we know what happens.
 
 setup_paging:
-	movl $1024*5,%ecx		    /* 5 pages - pg_dir+4 page tables */
+	movl $1024*33,%ecx		    /* 5 pages - pg_dir+4 page tables */
 	xorl %eax,%eax
 	mov  $pg_dir, %edi			/* pg_dir is at 0x70000 */
 	cld;rep;stosl
+
+	mov $pg_dir, %edi
+	mov $0x71007, %eax
+	mov $31, %ecx
+loop_set_pg_dir:
+	movl %eax, (%edi)
+	add $0x1000, %eax
+	add $4, %edi
+	sub $1, %ecx
+	jge loop_set_pg_dir
+
+/*
+loop_test:
+	jmp loop_test
+*/
+/*
 	mov  $pg_dir, %edi
     mov  $pg0+7,%eax 
-	movl %eax,(%edi)		    /* set present bit/user r/w */
+	movl %eax,(%edi)		    # set present bit/user r/w 
     mov  $pg1+7,%eax 
-	movl %eax,4(%edi)		    /*  --------- " " --------- */
+	movl %eax,4(%edi)		    #  --------- " " --------- 
     mov  $pg2+7,%eax 
-	movl %eax,8(%edi)		    /*  --------- " " --------- */
+	movl %eax,8(%edi)		    #  --------- " " --------- 
     mov  $pg3+7,%eax 
-	movl %eax,12(%edi) 			/*  --------- " " --------- */
-	movl $pg3+4092,%edi
-	movl $0xfff007,%eax		    /*  16Mb - 4096 + 7 (r/w user,p) */
+	movl %eax,12(%edi) 			#  --------- " " --------- 
+*/
+
+	movl $0x90000+4092,%edi
+	movl $0x7fff007,%eax		    /*  16Mb - 4096 + 7 (r/w user,p) */
 	std
 1:	stosl			/* fill pages backwards - more efficient :-) */
 	subl $0x1000,%eax
