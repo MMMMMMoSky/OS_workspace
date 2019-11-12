@@ -93,12 +93,13 @@ void sys_setup(void *hard_disk)
 
 void show_hard_info()
 {
-    printf("cylinder: %d\n", hd_info.cyl);
-    printf("head: %d\n", hd_info.head);
-    printf("wpcom: %d\n", hd_info.wpcom);
-    printf("ctl: %d\n",hd_info.ctl);
-    printf("lzone: %d\n",hd_info.lzone);
-    printf("sect: %d\n",hd_info.sect);
+	printf("hard information:");
+    printf("\n  cylinder: %d\n", hd_info.cyl);
+    printf("  head: %d\n", hd_info.head);
+    printf("  wpcom: %d\n", hd_info.wpcom);
+    printf("  ctl: %d\n",hd_info.ctl);
+    printf("  lzone: %d\n",hd_info.lzone);
+    printf("  sect: %d\n\n",hd_info.sect);
 }
 
 //判断并且循环等待硬盘控制器置位
@@ -398,7 +399,7 @@ void test_hard_disk()
     //读取硬盘信息
     void *hard_disk = (void *)0x5f700;
     sys_setup(hard_disk);
-    show_hard_info();
+    //show_hard_info();
 
     //初始化硬盘控制器——开启中断
     hd_init();
@@ -413,7 +414,7 @@ void test_hard_disk()
 			NR_HD = 1;
 	else
 		NR_HD = 0;
-	printf("NR_HD:%d\n",NR_HD);
+	//printf("NR_HD:%d\n",NR_HD);
 
 	//复位磁盘控制器
 	reset_hd(0);
