@@ -1,6 +1,9 @@
 #include "func_def.h"
 
-void set_string(struct file_directory *fd, char *name)
+struct file_directory path_root;  // root
+struct file_directory *path_now;  // file system path now
+
+void set_string(struct file_directory *fd, const char *name)
 {
     int i = 0;
     while (name[i] != '\0')
@@ -11,21 +14,16 @@ void set_string(struct file_directory *fd, char *name)
     fd->name[i] = '\0';
 }
 
-//初始化Home根目录
-void init_home()
+// 初始化文件系统
+// TODO: 从磁盘加载
+void init_file_system()
 {
-    extern struct file_directory home;
-    extern struct file_directory_point nowdf;
-    extern struct file_directory_point olddf;
-    home.name[0] = '/';
-    home.name[1] = 0;
-    home.left = 0;
-    home.right = 0;
-    home.father = 0;
-    home.flag = 1;
-    nowdf.fdp = &home; // now is home
-    olddf.fdp = &home; // at first they are equal to each other
+    set_string(&path_root, "/");
+    path_root.father = path_root.left = path_root.right = 0;
+    path_root.flag = 1;
+    path_now = &path_root;
 }
+
 //建一个新的目录，左孩子右兄弟上面是父节点模式
 void create_new_directory(struct file_directory_point *now_directory, char *name)
 {

@@ -5,8 +5,6 @@
 struct byte_buffer kb_buf,timer1_buf,timer2_buf,timer3_buf;
 struct timer_queue timer_q;
 struct timer timer1,timer2,timer3;
-struct file_directory home;
-struct file_directory_point nowdf,olddf;
 char routine[MAX_CONTEXT_BYTE];
 
 void main()  // bochs address: 0x106
@@ -22,7 +20,7 @@ void main()  // bochs address: 0x106
     io_out8(PIC0_IMR, 0xf8);  // 打开键盘和定时器中断
     mem_init_all();
     init_hard_disk();
-    init_home();
+    init_file_system();
 
     // start terminal process 
     start_new_terminal();
