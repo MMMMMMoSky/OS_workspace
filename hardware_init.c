@@ -1,4 +1,5 @@
 #include "func_def.h"
+#include "proc.h"
 
 void init_video()
 {
@@ -78,7 +79,11 @@ void handle_IRQ0(void)
 {
     io_out8(PIC0_OCW2, 0X60);
     extern struct timer_queue timer_q;
+    extern int time_to_switch;
     timer_q.count++;
+    if(!(--time_to_switch)){
+        switch_proc();
+    }
     if (timer_q.next > timer_q.count)
     {
         return;

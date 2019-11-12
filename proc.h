@@ -81,11 +81,14 @@ struct proc_struct_simple
 	int selector;
 	struct desc_struct ldt[3];
 	struct tss_struct tss;
+	int next;
 };
 
+
 struct proc_struct_simple proc_arr[MAX_PROCS];
-struct proc_struct_simple * current;
+int current;
 
 void test_proc();
 void wait_key();
+void switch_proc();
 

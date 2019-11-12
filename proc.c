@@ -99,12 +99,16 @@ void sched_init(void)
 
 void main_b()
 {
-    printf("Bbbbbbbbbbbbbbb");
-    for(;;);
+    for(int i=0;;i++)
+    {
+        if(i%100000==0)
+        {
+            printf("%d ",proc_arr[current].priority);
+        }
+    }
 }
 
-struct tss_struct tss_a, tss_b;
-
+int time_to_switch;
 extern struct byte_buffer kb_buf;
 
 void wait_key()
@@ -136,9 +140,12 @@ void initFirstProc()
 
     proc_arr[0].used = 1;
     proc_arr[0].state = 1;
+    proc_arr[0].next = 0;
+    proc_arr[0].priority = 1;
+    time_to_switch = proc_arr[0].priority*1000;
     //加载第一个tss的选择符
     load_tr(10*8);
-    current = &proc_arr[0];
+    current = 0;
 }
 
 int find_proc()
@@ -178,7 +185,31 @@ int new_proc(unsigned int addr, int priority)
 
     //关键是堆栈的设置
     proc_arr[i].tss.esp = 0x1000000 + 0x10000*(i+1);
+    proc_arr[i].next = proc_arr[current].next;
+    proc_arr[current].next = i;
     return i;
+}
+
+void kill_proc(int i)
+{
+
+}
+
+
+void switch_proc()
+{
+    int j = proc_arr[current].next;
+    if(j!=current) {
+        current = j;
+        time_to_switch = proc_arr[current].priority*100;
+        printf("%d", time_to_switch);
+        farjmp(0, proc_arr[j].selector);
+    }
+    else {
+        time_to_switch = proc_arr[current].priority*100;
+        printf("%d", time_to_switch);
+        return;
+    }
 }
 
 void test_proc()
@@ -190,7 +221,6 @@ void test_proc()
         printf("success");
     };
 
-    printf("546789");
-    farjmp(0, proc_arr[i].selector);
+    for(int i=0;;i++) if(i%100000==0)printf("%d ",proc_arr[current].priority);
     for(;;);
 }
