@@ -244,7 +244,7 @@ void switch_proc()
     if(j!=current) {
         current = j;
         time_to_switch = proc_arr[current].priority*100;
-        printf("%d\n", current);
+        //printf("%d\n", current);
         farjmp(0, proc_arr[j].selector);
     }
     else {
