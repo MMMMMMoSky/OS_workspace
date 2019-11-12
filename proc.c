@@ -195,21 +195,65 @@ void kill_proc(int i)
 
 }
 
-
 void switch_proc()
 {
     int j = proc_arr[current].next;
     if(j!=current) {
         current = j;
         time_to_switch = proc_arr[current].priority*100;
-        printf("%d", time_to_switch);
+        //printf("%d", time_to_switch);
         farjmp(0, proc_arr[j].selector);
     }
     else {
         time_to_switch = proc_arr[current].priority*100;
-        printf("%d", time_to_switch);
+        //printf("%d", time_to_switch);
         return;
     }
+}
+
+struct lock
+{
+    int locked;
+    int pid;
+};
+
+struct lock lock_key;
+struct lock lock_video;
+
+void init_lock()
+{
+    lock_key.locked = 0;
+    lock_video.locked = 0;
+}
+
+int holding(struct lock * lk)
+{
+    return (lk->locked == 1 && lk->pid == current);
+}
+
+static inline uint
+xchg(volatile uint *addr, uint newval)
+{
+    uint result;
+    // The + in "+m" denotes a read−modify−write operand.
+    asm volatile("lock; xchgl %0, %1"
+                 : "+m" (*addr), "=a" (result) 
+                 : "1" (newval) 
+                 : "cc");
+    return result;
+}
+
+int get_lock(struct lock * lk)
+{   
+    if(holding(lk)){
+        printf("error");
+        for(;;);
+    }
+    
+    while(xchg(&lk->locked,1)!=0);
+    __sync_synchronize();
+
+    lk->pid = current;
 }
 
 void test_proc()
