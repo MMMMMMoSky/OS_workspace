@@ -394,7 +394,7 @@ void write_disk(int b, void * buf)
     add_request(1, WRITE, b, buf);
 }
 
-void test_hard_disk()
+void init_hard_disk()
 {
     //读取硬盘信息
     void *hard_disk = (void *)0x5f700;
@@ -453,6 +453,6 @@ void test_hard_disk()
 
 	// for(int i = 0;i < 10000;i++);
 	// printf("%x",*((char *)buf+510));
-    printf("\n\nend\n\n");
+    // printf("\n\nend\n\n");
     //for(;;){;}
 }
