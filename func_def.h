@@ -83,6 +83,7 @@ void cmd_num_conv(const char *param);
 void cmd_invalid_cmd(const char *param);
 void cmd_calc(const char *param);
 void cmd_touch(const char *param);
+void cmd_mkdir(const char *param);
 void cmd_ls();
 void cmd_cd(const char *param);
 void cmd_rm(const char *param);
@@ -93,7 +94,7 @@ void cmd_show(const char * param);
 // implement in file.c
 void set_string(struct file_directory *fd, const char *name);
 void init_file_system();
-void create_new_directory(struct file_directory_point *now_directory, char *name);
-void create_new_file(struct file_directory_point *now_directory, char *name);
+struct file_directory* create_new_directory(struct file_directory *path, const char *name);
+struct file_directory* create_new_file(struct file_directory *path, const char *name);
 
 #endif

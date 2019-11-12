@@ -134,6 +134,9 @@ void exec_command(char *cmd_line)
     else if (strcmp(cmd_line, "touch") == 0) {
         cmd_touch(param);
     }
+    else if (strcmp(cmd_line, "mkdir") == 0) {
+        cmd_mkdir(param);
+    }
     else if (strcmp(cmd_line, "ls") == 0) {
         cmd_ls();
     }

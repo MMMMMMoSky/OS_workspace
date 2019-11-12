@@ -603,7 +603,7 @@ struct file_directory* parse_path_step(const char *dir, uint length, struct file
     }
     // 3. child folder
     for (struct file_directory* p = now->left; p; p = p->right) {
-        if (strncmp(dir, p->name, length) == 0) {
+        if (strncmp(dir, p->name, length) == 0 && p->name[length] == 0) {  // p->name[length] == 0
             return p;
         }
     }
@@ -645,6 +645,44 @@ struct file_directory* parse_path(const char *path, struct file_directory *now) 
     return now;
 }
 
+// 分离路径和文件(夹)名
+// path: 路径 (绝对路径/相对路径)
+// now: 当前路径
+// name: 从 path 中解析出的文件(夹)名
+// return: 成功则返回文件(夹)所在的路径, 解析失败则返回0
+// example: /home/sky/tmp.txt 分离得到 /home/sky 和 tmp.txt
+struct file_directory* parse_path_and_name(const char *path, 
+    struct file_directory *now, char *name) {
+
+    // strip spaces
+    uint length = 0;
+    while (*path == ' ') path++;
+    while (path[length]) length++;
+
+    // copy path
+    memcpy(name, path, length);
+    name[length] = 0;
+
+    // find last slash (extract file name)
+    uint slash = length;
+    for (uint i = 0; i < length; i++) {
+        if (name[i] == '/') slash = i;
+    }
+
+    struct file_directory *p = 0;
+    if (slash == length) { // no slash, path is just a filename
+        return now;
+    }
+
+    name[slash] = 0;
+    now = parse_path(name, now);
+    for (int i = slash + 1; i <= length; i++) {
+        name[i - slash - 1] = name[i];
+    }
+
+    return now;
+}
+
 void cmd_cd(const char *param)
 {
     struct file_directory *res = parse_path(param, path_now);
@@ -659,34 +697,41 @@ void cmd_cd(const char *param)
     }
 }
 
+void cmd_touch_mkdir(const char *param, int flag)
+{
+    char name[1024];
+    struct file_directory *path = parse_path_and_name(param, path_now, name);
+
+    if (path == 0) {
+        printf("Error: invalid path.\n");
+        return;
+    }
+
+    int length = 0;
+    while (name[length]) length++;
+    if (length > MAX_NAME_BYTE || length < 0) {
+        printf("Error: length of name should be in range of [0, %d]\n", MAX_NAME_BYTE);
+        return;
+    }
+
+    if (parse_path_step(name, length, path)) {
+        printf("Error: file/directory already exist.\n");
+        return;
+    }
+
+    if (flag) create_new_directory(path, name);
+    else create_new_file(path, name);
+}
+
+void cmd_mkdir(const char *param)
+{
+    cmd_touch_mkdir(param, 1);
+}
+
+// 创建文件
 void cmd_touch(const char *param)
 {
-    /*
-    int i = 0;
-    if (nowdf->fdp->flag == 0)
-    {
-        prints("Error: now you are in a file but not a directory\n");
-        return;
-    }
-    while (param[i] != '\0')
-    {
-        i++;
-    }
-    int length = i;
-    if (length > 30)
-    {   printf("wrong name size");
-        return;
-    }
-    //末尾是.txt代表文件
-    if (param[length - 1] == 't' && param[length - 2] == 'x' && param[length - 3] == 't' && param[length - 4] == '.')
-    {   //disposed as a file
-        create_new_file(nowdf, param);
-        prints("create file successfully\n");
-        return;
-    }
-    create_new_directory(nowdf, param);
-    prints("create directory successfully\n");
-    */
+    cmd_touch_mkdir(param, 0);
 }
 
 void cmd_ls()
@@ -696,7 +741,7 @@ void cmd_ls()
         return;
     }
     for (struct file_directory *p = path_now->left; p; p = p->right) {
-        printf("%c\t%s\n", (p->flag ? 'd' : 'f'), p->name);
+        printf("%s  %s\n", (p->flag ? "DIR " : "FILE"), p->name);
     }
 }
 
