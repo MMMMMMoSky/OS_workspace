@@ -33,9 +33,9 @@ void timer_settime(struct timer *timer, uint timeout,
     tq->timer[num] = *timer;
     tq->timer[num].timeout = timeout + tq->count;
     tq->timer[num].flags = TIMER_FLAGS_USING;
-    if (tq->next > timer->timeout)
+    if (tq->next > tq->timer[num].timeout)
     {
-        tq->next = timer->timeout;
+        tq->next = tq->timer[num].timeout;
     }
     return;
 }

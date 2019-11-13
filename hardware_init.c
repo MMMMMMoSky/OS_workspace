@@ -74,19 +74,22 @@ void keyboard_intr()
     put_byte_buffer(&kb_buf, data);
 }
 
+
+extern int time_to_switch;
 // 时间中断IRQ0
 void handle_IRQ0(void)
 {
     io_out8(PIC0_OCW2, 0X60);
     extern struct timer_queue timer_q;
-    extern int time_to_switch;
     timer_q.count++;
+
+    int switch_flag = 0;
     if(!(--time_to_switch)){
-        switch_proc();
+        switch_flag = 1;
     }
     if (timer_q.next > timer_q.count)
     {
-        return;
+        goto switch_label;
     }
     timer_q.next = MAX_TIME;
     for (int i = 0; i < TIMER_NUM; i++)
@@ -107,4 +110,6 @@ void handle_IRQ0(void)
             }
         }
     }
+switch_label:
+    if(switch_flag) switch_proc();
 }
