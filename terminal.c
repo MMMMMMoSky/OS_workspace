@@ -170,7 +170,7 @@ void exec_command(char *cmd_line)
     }
     else if(strcmp(cmd_line, "term") == 0) {
         int t_para = param[0]-'0';
-        if(t_para==cur_term) return;
+        if(t_para==cur_term || strcmp(param, "")==0) return;
         io_cli();
         if(terminal_table[t_para]->flag == 0)//创建新终端
         {
@@ -223,9 +223,9 @@ void exec_command(char *cmd_line)
 // terminal process; start this function after all os init done
 void running_term()
 {
-    if (term_cnt == 0) {
-        return ;
-    }
+    // if (term_cnt == 0) {
+    //     return ;
+    // }
     while (1) {
         printf("%d, [tty%u] %s $ ",current, cur_term, path_now->name);
         if(get_lock(&lock_kb));
