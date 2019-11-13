@@ -95,6 +95,7 @@ void cmd_pwd();
 void cmd_cat(const char *param);
 void cmd_show(const char * param);
 void cmd_term(const char * param);
+void cmd_append(cosnt char *param);
 
 // implement in file.c
 void set_string(struct file_directory *fd, const char *name);
@@ -103,5 +104,7 @@ void remove_file(struct file_directory *p);
 void remove_directory(struct file_directory *p);
 struct file_directory* create_new_directory(struct file_directory *path, const char *name);
 struct file_directory* create_new_file(struct file_directory *path, const char *name);
+void file_append_str(struct file_directory* p, const char* str);
+void print_file_context(struct file_directory* p);
 
 #endif
