@@ -116,14 +116,15 @@ void free_file_block(int blk)
     hd_buf_blk = -1;
     while (1) {
         // 在记录位中释放该块, 根据 blk 计算 id, idx, bit
-        int id = blk / 8192, idx = (blk % 8192) / 8, bit = 1 << (blk & 7);
+        int num = blk - 256;
+        int id = num / 8192 + 1, idx = (num % 8192) / 8, bit = 1 << (num & 7);
         hd_usage[id][idx] &= ~bit;
         write_disk(id, hd_usage[id]);
 
         // 读入该块, 判断是否还有下一块
         read_disk(blk, hd_buf);
-        if ((uint*)(hd_buf + 1020) <= 1000) break;  // 不超过 1k 说明该文件在当前块结束
-        blk = (uint*)(hd_buf + 1016);
+        if (*(uint*)(hd_buf + 1020) <= 1000) break;  // 不超过 1k 说明该文件在当前块结束
+        blk = *(uint*)(hd_buf + 1016);
     }
 }
 
