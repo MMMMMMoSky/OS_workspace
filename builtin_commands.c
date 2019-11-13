@@ -338,6 +338,7 @@ int cmd_calc_prog(calc_word* calc_param,int* cmd, int cmd_end)
             }
         }while( calc_param[*cmd-1].calc_sym==3 || calc_param[*cmd-1].calc_sym==4 );
     }while( calc_param[*cmd-1].calc_sym==1 || calc_param[*cmd-1].calc_sym==2 );
+    //printf("back\n");
     return error;
 }
 
@@ -356,6 +357,7 @@ void cmd_calc_calc(calc_word* calc_param,int*calc_answer,uint cmd_end)
      cmd_stack houzhui[1024]={0};
 
      //////////////////////////generate suffix expressions
+     printf("start to generate suffix expressions\n");
      while(param_cmd<cmd_end){
          //figure
          if(calc_param[param_cmd].calc_sym == 5){
@@ -396,7 +398,7 @@ void cmd_calc_calc(calc_word* calc_param,int*calc_answer,uint cmd_end)
                      while(!(calc_stack[0].sym == '(' || 
                      ((calc_stack[0].sym == '+'||calc_stack[0].sym == '-')
                      &&(calc_param[param_cmd].calc_sym == 3 ||calc_param[param_cmd].calc_sym == 4))
-                      || calc_param[param_cmd].calc_sym == 6)){
+                      || calc_param[param_cmd].calc_sym == 6) && deep_stack>0 ){
                           houzhui[houzhui_cmd].sym=calc_stack[0].sym;
                           houzhui_cmd++;
                           deep_stack-=1;
@@ -429,6 +431,7 @@ void cmd_calc_calc(calc_word* calc_param,int*calc_answer,uint cmd_end)
      }
     stack_now= stack_prep=deep_stack=houzhui_cmd=0;
      ////////////////////////computing   suffix  expressions
+     printf("start to computing   suffix  expressions\n");
      while(stack_prep<cmd_end){
          if(calc_param[stack_prep].calc_sym ==6 || calc_param[stack_prep].calc_sym ==7)
          stack_now++;
