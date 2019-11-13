@@ -49,19 +49,17 @@ struct _bucket_dir
 };
 
 //file
+struct blk_ptr
+{ uint block, index; };
+
 struct file_directory
 {
-    char context[MAX_CONTEXT_BYTE];
-    char name[MAX_NAME_BYTE];
-    struct file_directory *left;
+    struct blk_ptr blk, lblk, rblk;
+    struct file_directory *left;        // wtf..? 指针不能放在结构体最开始?
     struct file_directory *right;
     struct file_directory *father;
-    int flag;//1 directory;0 file
-};
-
-struct file_directory_point
-{
-    struct file_directory *fdp;
+    int start_block;    // <0: directory; >=0: start block of file
+    char name[MAX_NAME_BYTE];
 };
 
 struct terminal{

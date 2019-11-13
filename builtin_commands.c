@@ -689,7 +689,7 @@ void cmd_cd(const char *param)
     if (res == 0) {
         prints("Error: invalid path\n");
     }
-    else if (res->flag == 0) {
+    else if (res->start_block >= 0) {
         prints("Error: can not enter a file\n");
     }
     else {
@@ -736,12 +736,12 @@ void cmd_touch(const char *param)
 
 void cmd_ls()
 {
-    if (path_now->flag == 0) {
+    if (path_now->start_block >= 0) {
         prints("Error: now you are in a file but not a directory\n");
         return;
     }
     for (struct file_directory *p = path_now->left; p; p = p->right) {
-        printf("%s  %s\n", (p->flag ? "DIR " : "FILE"), p->name);
+        printf("%s  %s\n", (p->start_block < 0 ? "DIR " : "FILE"), p->name);
     }
 }
 
@@ -834,7 +834,7 @@ void cmd_rm(const char *param)
         printf("Error: invalid path.\n");
         return ;
     }
-    if (p->flag != option_r) {
+    if ((p->start_block < 0) != option_r) {
         printf("Error: can not remove a directory without -r or remove a file with -r\n");
         printf("Try 'rm -h' for more information\n");
         return;
@@ -873,7 +873,8 @@ void cmd_cat(const char *param)
         }
     }
     if (p) {
-        printf("%s\n", p->context);
+        // TODO: real file system
+        // printf("%s\n", p->context);
     }
     else {
         printf("Error: invalid file path\n");
