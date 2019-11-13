@@ -1,8 +1,18 @@
 #include "func_def.h"
 #include "hdreg.h"
+#include "proc.h"
 
 extern struct file_directory path_root;  // root
 extern struct file_directory *path_now;  // file system path now
+
+struct terminal * terminal_table[MAX_TERMINAL_CNT] ;
+extern struct lock lock_kb;
+extern struct lock lock_video;
+extern struct proc_struct_simple proc_arr[MAX_PROCS];
+extern int current;
+extern unsigned int video_mem;
+extern uint cursor_x, cursor_y;
+extern uint cur_term;
 
 void cmd_echo(const char *param)
 {
@@ -909,4 +919,42 @@ void cmd_show(const char * param)
     else {
         printf("invalid options\n");
     }
+}
+
+void cmd_term(const char * param)
+{
+    int t_para = param[0]-'0';
+        if(t_para==cur_term || strcmp(param, "")==0) return;
+        io_cli();
+        if(terminal_table[t_para]->flag == 0)//创建新终端
+        {
+            int newp = new_proc(running_term, 10);
+            if(newp==0){
+                printf("error on new proc\n");
+                for(;;);
+            } 
+            proc_arr[newp].video_mem = VIDEO_MEM;
+            proc_arr[current].video_mem = terminal_table[proc_arr[current].term]->term_vram;
+            set_new_terminal(t_para);
+            int t;
+            t = proc_arr[newp].term = t_para;//get_new_terminal();
+            terminal_table[t]->pid =  newp;
+
+            switch_terminal(t);
+
+            release_lock(&lock_kb);
+            awaken(newp);
+            exec(newp);
+            printf("\n");
+        }
+        else {//切换终端
+            proc_arr[t_para].video_mem = VIDEO_MEM;
+            proc_arr[cur_term].video_mem = terminal_table[proc_arr[cur_term].term]->term_vram;
+            switch_terminal(t_para);
+            release_lock(&lock_kb);
+
+            exec(terminal_table[t_para]->pid);
+            printf("\n");
+        }
+
 }
