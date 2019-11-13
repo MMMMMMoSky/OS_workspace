@@ -917,3 +917,48 @@ void cmd_term(const char * param)
         }
 
 }
+
+void cmd_append_help()
+{
+    prints(
+        "\n"
+        "append\n"
+        "  append a line to the end of a file\n"
+        "Usage: append [option] path context\n"
+        "Options:\n"
+        "  -h, -help        print this page\n"
+        "path: absolute or relative path of a file\n"
+        "Notice: if there are more than 1 space\n"
+        "        bewteen path and context\n"
+        "        they will be writen into file\n"
+        "\n"
+    ); 
+}
+
+// 向文件末尾添加一行内容
+void cmd_append(const char *param)
+{
+    while (*param == ' ') param++;
+    if (strncmp(param, "-h", 2) == 0 || strncmp(param, "-help", 5) == 0) {
+        cmd_append_help();
+        return ;
+    }
+
+    int length = 0;
+    char path[1024];
+    const char *context = param;
+    while (*context != ' ') path[length++] = *context++;
+    context++;
+
+    struct file_directory *p = parse_path(path, path_now);
+    if (p == 0 || p->start_block < 0) {
+        printf("Error: invalid file path\n");
+        printf("Try 'append -h' for more information\n");
+    }
+    else {
+        file_append_str(p, context);
+        uint i = 0;
+        while (*context) context++, i++;
+        printf("%u bytes writen to %s\n", i, p->name);
+    }
+}
