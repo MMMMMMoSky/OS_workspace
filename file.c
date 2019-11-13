@@ -398,3 +398,23 @@ void file_append_str(struct file_directory* p, const char* str)
     }
     write_disk(blk, buf);
 }
+
+// 打印文件中的所有内容
+void print_file_context(struct file_directory* p)
+{
+    printf(">>>>>>>>>> file [%s] start\n", p->name);
+    uint tot_byte = 0;
+    hd_buf_blk = p->start_block;
+    while (1) {
+        read_disk(hd_buf_blk, hd_buf);
+        uint *psz = (uint*)(hd_buf + 1020);
+        uint *pnxt = (uint*)(hd_buf + 1016);
+        tot_byte += *psz;
+        for (int i = 0; i < *psz; i++) {
+            v_putchar((char)hd_buf[i]);
+        }
+        if (*psz <= 1000) break;
+        hd_buf_blk = *pnxt;
+    }
+    printf("\n<<<<<<<<<< end %u bytes totally\n", tot_byte);
+}
