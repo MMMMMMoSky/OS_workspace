@@ -169,7 +169,7 @@ void exec_command(char *cmd_line)
         cmd_term(param);
     }
     else if(strcmp(cmd_line, "newp") == 0){
-        
+        cmd_proc(param);
     }
     else if (strcmp(cmd_line, "append") == 0) {
         cmd_append(param);
