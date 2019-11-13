@@ -146,7 +146,7 @@ static void hd_out(unsigned int drive,unsigned int nsect,unsigned int sect,
 		unsigned int head,unsigned int cyl,unsigned int cmd,
 		void (*intr_addr)(void))
 {
-	printf("command:%x\n",cmd);
+	// printf("command:%x\n",cmd);
 	register int port asm("dx");
 
 	if (drive>1 || head>15)
@@ -241,7 +241,7 @@ static void read_intr(void)
 		return;
 	}
 
-	printf("read end\n");
+	// printf("read end\n");
 	end_request(1);
 	do_hd_request();
 }
@@ -261,7 +261,7 @@ static void write_intr(void)
 		port_write(HD_DATA,CURRENT->buffer,256);
 		return;
 	}
-	printf("write end\n");
+	// printf("write end\n");
 	end_request(1);
 	do_hd_request();
 }
@@ -273,7 +273,7 @@ static void recal_intr(void)
 		bad_rw_intr();
 	else
 	{
-		printf("reset successful\n");
+		// printf("reset successful\n");
 	}
 	//do_hd_request();
 }
@@ -303,7 +303,7 @@ void do_hd_request()
 
     if (CURRENT->nr_sectors == 0)
 	{
-		printf("no request");
+		// printf("no request");
 		return ;
 	}
 
