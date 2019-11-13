@@ -252,6 +252,14 @@ void awaken(int i)
     proc_arr[i].state = STA_WAKE;
 }
 
+void sleep(int i)
+{
+    if(i>=MAX_PROCS || i<=0) {
+        printf("error awaken");
+        for(;;);
+    }
+    proc_arr[i].state = STA_SLEEP;
+}
 
 void switch_proc()
 {
@@ -261,7 +269,7 @@ void switch_proc()
     terminal_table[t]->x = cursor_x;
     terminal_table[t]->y = cursor_y;
     while(1){
-        j = proc_arr[current].next;
+        j = proc_arr[j].next;
         if(proc_arr[j].state==STA_WAKE)
             break;
     }
@@ -274,7 +282,7 @@ void switch_proc()
         cursor_x = terminal_table[term]->x;
         cursor_y = terminal_table[term]->y;
         cur_term = term;
-
+        v_move_cursor(cursor_x, cursor_y);
         farjmp(0, proc_arr[j].selector);
     }
     else {
@@ -344,15 +352,7 @@ void show_proc()
 
 void exec(int i)
 {
-    current = i;
-    time_to_switch = proc_arr[current].priority*100;
-    video_mem = proc_arr[current].video_mem;
-    int t = proc_arr[current].term;
-    cur_term = t;
-    cursor_x = terminal_table[t]->x;
-    cursor_y = terminal_table[t]->y;
-    farjmp(0, proc_arr[i].selector);
-    io_sti();
+    switch_proc();
 }
 
 void init_proc()

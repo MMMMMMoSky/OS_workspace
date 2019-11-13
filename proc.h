@@ -106,4 +106,4 @@ void release_lock(struct lock * lk);
 void awaken(int pid);
 void show_proc();
 void exec(int i);
-
+void sleep(int i);

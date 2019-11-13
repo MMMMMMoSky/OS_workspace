@@ -168,9 +168,6 @@ void exec_command(char *cmd_line)
     else if(strcmp(cmd_line, "term") == 0) {
         cmd_term(param);
     }
-    else if(strcmp(cmd_line, "ch") == 0) {
-        
-    }
     else if(strcmp(cmd_line, "newp") == 0){
         
     }
@@ -189,17 +186,20 @@ void exec_command(char *cmd_line)
 }
 
 // terminal process; start this function after all os init done
+// terminal process; start this function after all os init done
 void running_term()
 {
-    // if (term_cnt == 0) {
-    //     return ;
-    // }
     while (1) {
-        printf("[tty%u] %s $ ", cur_term, path_now->name);
-        if(get_lock(&lock_kb));
-
-        getline(cmd_buf, 1024);
-        exec_command(cmd_buf);  // parse and execute command
+        printf("%d, [tty%u] %s $ ",current, cur_term, path_now->name);
+label_lock:
+        if(proc_arr[current].video_mem==VIDEO_MEM)
+        {
+            if(get_lock(&lock_kb));
+            getline(cmd_buf, 1024);
+            exec_command(cmd_buf);  // parse and execute command
+        }
+        else {
+            goto label_lock;
+        }
     }
 }
-

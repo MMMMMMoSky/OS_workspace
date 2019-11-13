@@ -58,6 +58,9 @@ Image: bootsect setup system
 hard_disk_drive:
 	@qemu-img create hard_disk_drive 100M
 
+bochs:	Image hard_disk_drive
+	@bochs
+
 clean-all:
 	@rm -f *.o *.s bootsect setup sys_head kernel system Image hard_disk_drive
 

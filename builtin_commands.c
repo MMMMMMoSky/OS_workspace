@@ -893,42 +893,89 @@ void cmd_show(const char * param)
     }
 }
 
+
 void cmd_term(const char * param)
 {
-    int t_para = param[0]-'0';
-        if(t_para==cur_term || strcmp(param, "")==0) return;
-        io_cli();
-        if(terminal_table[t_para]->flag == 0)//创建新终端
-        {
-            int newp = new_proc(running_term, 10);
-            if(newp==0){
-                printf("error on new proc\n");
-                for(;;);
-            } 
-            proc_arr[newp].video_mem = VIDEO_MEM;
-            proc_arr[current].video_mem = terminal_table[proc_arr[current].term]->term_vram;
-            set_new_terminal(t_para);
-            int t;
-            t = proc_arr[newp].term = t_para;//get_new_terminal();
-            terminal_table[t]->pid =  newp;
-
-            switch_terminal(t);
-
-            release_lock(&lock_kb);
-            awaken(newp);
-            exec(newp);
-            printf("\n");
+    int t_para;
+    if(param[0]=='\0'){
+        return;
+    }
+    if(param[1]=='\0' || param[1]==' '){
+        for(char *ch=&param[1];*ch!='\0';ch++){
+            if(*ch!=' '){
+                printf("error options\n");
+                return;
+            }
         }
-        else {//切换终端
-            proc_arr[t_para].video_mem = VIDEO_MEM;
-            proc_arr[cur_term].video_mem = terminal_table[proc_arr[cur_term].term]->term_vram;
-            switch_terminal(t_para);
-            release_lock(&lock_kb);
-
-            exec(terminal_table[t_para]->pid);
-            printf("\n");
+        if(param[0]<'0' || param[0] >'9'){
+            printf("error options\n");
+            return;
         }
+        t_para = param[0]-'0';
+    }
+    else if(param[2]=='\0'){
+        for(char *ch=&param[2];*ch!='\0';ch++){
+            if(*ch!=' '){
+                printf("error options\n");
+                return;
+            }
+        }
+        if(param[0]<'0' || param[0] >'9' || param[1] <'0' || param[1] >'9'){
+            printf("error options\n");
+            return;
+        }
+        t_para = (param[0]-'0')*10 + (param[1]-'0');
+    }
+    else {
+        return;
+    }
+    if(t_para==cur_term) return;
+    if(t_para > 15){
+        printf("term num <= 15\n");
+        return;
+    }
+    if(terminal_table[t_para]->flag == 0)//创建新终端
+    {
+        //printf("new terminal");
+        int newp = new_proc(running_term, 10);
+        if(newp==0){
+            printf("error on new proc\n");
+            for(;;);
+        } 
+        proc_arr[newp].video_mem = VIDEO_MEM;
+        proc_arr[current].video_mem = terminal_table[proc_arr[current].term]->term_vram;
+        set_new_terminal(t_para);
+        proc_arr[newp].term = t_para;//get_new_terminal();
+        terminal_table[t_para]->pid =  newp;
 
+        release_lock(&lock_kb);
+        switch_terminal(t_para);
+
+        sleep(current);
+        awaken(newp);
+        exec(newp);
+    }
+    else {//切换终端
+    //printf("change terminal");
+    io_cli();
+        proc_arr[terminal_table[t_para]->pid].video_mem = VIDEO_MEM;
+        proc_arr[current].video_mem = terminal_table[proc_arr[current].term]->term_vram;
+        
+        release_lock(&lock_kb);
+        switch_terminal(t_para);
+
+    io_sti();
+        sleep(current);
+        awaken(terminal_table[t_para]->pid);
+        exec(terminal_table[t_para]->pid);
+        //printf("bbbbbbbbbb\n");
+    }
+
+}
+
+void cmd_proc(const char * param)
+{
+    
 }
 
 void cmd_append_help()

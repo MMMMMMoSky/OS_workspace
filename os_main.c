@@ -8,6 +8,7 @@ struct timer timer1,timer2,timer3;
 char routine[MAX_CONTEXT_BYTE];
 extern struct proc_struct_simple proc_arr[MAX_PROCS];
 extern unsigned int video_mem, cursor_x, cursor_y;
+extern struct terminal * terminal_table[MAX_TERMINAL_CNT] ;
 
 void main()  // bochs address: 0x106
 {
@@ -34,8 +35,10 @@ void main()  // bochs address: 0x106
         goto loop;
     }
 
-    proc_arr[term_proc].term = get_new_terminal();
+    proc_arr[term_proc].term = 1;
+    set_new_terminal(1);
     switch_terminal(proc_arr[term_proc].term);
+    terminal_table[1]->pid = term_proc;
     awaken(term_proc);
     
     io_sti();
