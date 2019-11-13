@@ -5,6 +5,7 @@ struct file_directory *path_now;  // file system path now
 byte hd_usage[6][1024];           // 前 6 个硬盘块, 储存索引树/硬盘块的使用情况 (详见README)
 
 // hd_buf 缓存一个硬盘块(-1表示没有), hd_buf_blk 表示块号
+// TODO: 暂时没有考虑多任务
 int hd_buf_blk;
 byte hd_buf[1024];
 
@@ -360,4 +361,40 @@ void remove_directory(struct file_directory *p)
     if (p != &path_root) {
         remove_file(p);
     }
+}
+
+// 获取某个文件的最后一个块的块号
+int get_file_last_block(struct file_directory* p)
+{
+    hd_buf_blk = p->start_block; 
+    while (1) {
+        read_disk(hd_buf_blk, hd_buf);
+        if (*(uint*)(hd_buf + 1020) <= 1000) break;
+        hd_buf_blk = *(uint*)(hd_buf + 1016);
+    }
+    return hd_buf_blk;
+}
+
+// 向文件末尾添加字符串 str
+void file_append_str(struct file_directory* p, const char* str)
+{
+    byte buf[1024];  // 当前文件的缓冲
+    int blk = get_file_last_block(p);
+    read_disk(blk, buf);
+    uint *psz = (uint*)(buf + 1020);
+    uint *pnxt = (uint*)(buf + 1016);
+    // 现在, 该文件的最后一个块储存在 hd_buf 中
+    // 将字符一个一个写入其中, 如果写满, 则需要新分配一个块
+    for (; *str; str++) {
+        if (*psz == 1000) {
+            *psz = 1024;
+            *pnxt = new_file_block();
+            write_disk(blk, buf);
+            blk = *pnxt;
+            read_disk(blk, buf);
+        }
+        *(char*)(buf + (*psz)) = *str;
+        (*psz)++; 
+    }
+    write_disk(blk, buf);
 }
