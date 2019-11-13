@@ -186,11 +186,40 @@ void init_file_system()
 }
 
 // 建一个新的目录, 左孩子右兄弟上面是父节点模式
+// 与新建文件夹不同的是: 新建文件不需要在硬盘中分配块, 只需要更新索引即可
 struct file_directory* create_new_directory(struct file_directory *path, const char *name)
 {
-    // 在目前的设计中, 目录和文件仅有 flag 一项不同, 所以可以复用代码
-    struct file_directory *new_directory = create_new_file(path, name);
+    struct file_directory* new_directory;
+    new_directory = (struct file_directory*)mem_alloc(sizeof(struct file_directory));
+
+    // 设置结构体信息
+    set_string(new_directory, name);
+    new_directory->father = path;
+    new_directory->left = new_directory->right = 0; 
+    new_directory->lblk.index = new_directory->rblk.index = 1024;
+
+    // 与新建文件不同: 这里设置为 -1; 只有这一句话不同, 其他都一样
     new_directory->start_block = -1;
+
+    // 获取该节点在硬盘中的储存位置, 并更新内存和硬盘中的记录位
+    new_index_node_pos(&new_directory->blk);
+
+    // 找到 path->right 链表的尾节点, 将 new_file 插入其后
+    // 虽然逆序插入 O(1), 但是会增加一次硬盘读写, 所以实际效率更低
+    struct file_directory* rfa;
+    if (path->left == 0) rfa = path;
+    else {
+        rfa = path->left;
+        while (rfa->right) rfa = rfa->right;
+    }
+    rfa->left = new_directory;
+    rfa->lblk.block = new_directory->blk.block;
+    rfa->lblk.index = new_directory->blk.index;
+
+    // 在硬盘的索引树中更新 rfa 和 new_file 节点
+    save_index_node(rfa);
+    save_index_node(new_directory);
+
     return new_directory;
 }
 
