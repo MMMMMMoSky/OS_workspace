@@ -66,6 +66,17 @@ void new_index_node_pos(struct blk_ptr *res)
     write_disk(0, hd_usage[0]);
 }
 
+// 将索引节点的记录位置为空
+void free_index_node(struct blk_ptr *p)
+{
+    // 先计算出 p 是第几个索引节点
+    int num = (p->block - 6) * 16 + (p->index) / sizeof(struct file_directory);
+    // 然后计算下标和与数
+    int idx = num / 8, bit = 1 << (num & 7);
+    hd_usage[0][idx] &= ~bit;  // 将 bit 位清空
+    write_disk(0, hd_usage[0]);
+}
+
 // 分配一个新的硬盘块, 用于储存文件, 更新硬盘和内存中的记录
 // 初始化该块为一个空文件
 int new_file_block()
@@ -86,7 +97,7 @@ int new_file_block()
 
     // 位置确定, 更新内存和硬盘中的记录位
     hd_usage[id][idx] |= bit;
-    write_disk(id, hd_usage[id]); 
+    write_disk(id, hd_usage[id]);
 
     // 将该文件块初始化为全0
     hd_buf_blk = ret;
@@ -96,6 +107,24 @@ int new_file_block()
     write_disk(hd_buf_blk, hd_buf);
 
     return ret;
+}
+
+// 释放一个文件的所有硬盘块, 更新硬盘和内存中的记录
+// 传入的是起始块号
+void free_file_block(int blk)
+{
+    hd_buf_blk = -1;
+    while (1) {
+        // 在记录位中释放该块, 根据 blk 计算 id, idx, bit
+        int id = blk / 8192, idx = (blk % 8192) / 8, bit = 1 << (blk & 7);
+        hd_usage[id][idx] &= ~bit;
+        write_disk(id, hd_usage[id]);
+
+        // 读入该块, 判断是否还有下一块
+        read_disk(blk, hd_buf);
+        if ((uint*)(hd_buf + 1020) <= 1000) break;  // 不超过 1k 说明该文件在当前块结束
+        blk = (uint*)(hd_buf + 1016);
+    }
 }
 
 void unformatted_hard_disk()
@@ -133,7 +162,7 @@ byte load_child_node(struct file_directory* node)
     if (node->lblk.index < 1024) {
         node->left = (struct file_directory*)mem_alloc(sizeof(struct file_directory));
         if (load_index_node(node->left, &node->lblk) ||  // 先加载左子节点
-            load_child_node(node->left)) {               // 然后递归加载左子树
+                load_child_node(node->left)) {               // 然后递归加载左子树
             mem_free(node->left, sizeof(struct file_directory));
             return 1;
         }
@@ -144,7 +173,7 @@ byte load_child_node(struct file_directory* node)
     if (node->rblk.index < 1024) {
         node->right = (struct file_directory*)mem_alloc(sizeof(struct file_directory));
         if (load_index_node(node->right, &node->rblk) ||
-            load_child_node(node->right)) {
+                load_child_node(node->right)) {
             mem_free(node->right, sizeof(struct file_directory));
             return 1;
         }
@@ -153,7 +182,7 @@ byte load_child_node(struct file_directory* node)
         node->right = 0;
     }
 
-    // 设置 father 
+    // 设置 father
     for (struct file_directory* p = node->left; p; p = p->right) {
         p->father = node;
     }
@@ -168,17 +197,17 @@ void init_file_system()
 
     // 加载前 6 个块
     for (int i = 0; i < 6; i++) {
-        read_disk(i, hd_usage[i]); 
+        read_disk(i, hd_usage[i]);
     }
 
     struct blk_ptr tmp;
     tmp.block = 6, tmp.index = 0;
 
     if (!(hd_usage[0][0] & 1) ||             // 检查根目录索引节点是否记录为已使用
-        load_index_node(&path_root, &tmp) || // 加载根节点并检查位置储存是否正确
-        path_root.rblk.index < 1024 ||       // 根节点不可能有 right 指针
-        path_root.father != 0 ||             // 根节点的 father 必须为 0, 除了根节点的 father 之外, 其他节点的 father, left, right 都没有意义
-        load_child_node(path_now)) {         // 加载其他节点
+            load_index_node(&path_root, &tmp) || // 加载根节点并检查位置储存是否正确
+            path_root.rblk.index < 1024 ||       // 根节点不可能有 right 指针
+            path_root.father != 0 ||             // 根节点的 father 必须为 0, 除了根节点的 father 之外, 其他节点的 father, left, right 都没有意义
+            load_child_node(path_now)) {         // 加载其他节点
 
         unformatted_hard_disk();
 
@@ -195,7 +224,7 @@ struct file_directory* create_new_directory(struct file_directory *path, const c
     // 设置结构体信息
     set_string(new_directory, name);
     new_directory->father = path;
-    new_directory->left = new_directory->right = 0; 
+    new_directory->left = new_directory->right = 0;
     new_directory->lblk.index = new_directory->rblk.index = 1024;
 
     // 与新建文件不同: 这里设置为 -1; 只有这一句话不同, 其他都一样
@@ -204,20 +233,25 @@ struct file_directory* create_new_directory(struct file_directory *path, const c
     // 获取该节点在硬盘中的储存位置, 并更新内存和硬盘中的记录位
     new_index_node_pos(&new_directory->blk);
 
-    // 找到 path->right 链表的尾节点, 将 new_file 插入其后
+    // 找到 path->left->right 链表的尾节点, 将 new_directory 插入其后, 并更新该节点
     // 虽然逆序插入 O(1), 但是会增加一次硬盘读写, 所以实际效率更低
-    struct file_directory* rfa;
-    if (path->left == 0) rfa = path;
-    else {
-        rfa = path->left;
-        while (rfa->right) rfa = rfa->right;
+    if (path->left == 0) {
+        path->left = new_directory; 
+        path->left = new_directory;
+        path->lblk.block = new_directory->blk.block;
+        path->lblk.index = new_directory->blk.index;
+        save_index_node(path);
     }
-    rfa->left = new_directory;
-    rfa->lblk.block = new_directory->blk.block;
-    rfa->lblk.index = new_directory->blk.index;
+    else {
+        struct file_directory* rfa = path->left;
+        while (rfa->right) rfa = rfa->right;
+        rfa->right = new_directory;
+        rfa->rblk.block = new_directory->blk.block;
+        rfa->rblk.index = new_directory->blk.index;
+        save_index_node(rfa);
+    }
 
-    // 在硬盘的索引树中更新 rfa 和 new_file 节点
-    save_index_node(rfa);
+    // 在硬盘的索引树中更新 new_directory 节点
     save_index_node(new_directory);
 
     return new_directory;
@@ -233,49 +267,78 @@ struct file_directory* create_new_file(struct file_directory *path, const char *
     // 设置结构体信息
     set_string(new_file, name);
     new_file->father = path;
-    new_file->left = new_file->right = 0; 
+    new_file->left = new_file->right = 0;
     new_file->lblk.index = new_file->rblk.index = 1024;
 
     // 在硬盘中创建该文件的第一个块
-    new_file->start_block = new_file_block();  
+    new_file->start_block = new_file_block();
 
     // 获取该节点在硬盘中的储存位置, 并更新内存和硬盘中的记录位
     new_index_node_pos(&new_file->blk);
 
-    // 找到 path->right 链表的尾节点, 将 new_file 插入其后
+    // 找到 path->left->right 链表的尾节点, 将 new_file 插入其后, 并更新该节点
     // 虽然逆序插入 O(1), 但是会增加一次硬盘读写, 所以实际效率更低
-    struct file_directory* rfa;
-    if (path->left == 0) rfa = path;
-    else {
-        rfa = path->left;
-        while (rfa->right) rfa = rfa->right;
+    if (path->left == 0) {
+        path->left = new_file; 
+        path->left = new_file;
+        path->lblk.block = new_file->blk.block;
+        path->lblk.index = new_file->blk.index;
+        save_index_node(path);
     }
-    rfa->left = new_file;
-    rfa->lblk.block = new_file->blk.block;
-    rfa->lblk.index = new_file->blk.index;
+    else {
+        struct file_directory* rfa = path->left;
+        while (rfa->right) rfa = rfa->right;
+        rfa->right = new_file;
+        rfa->rblk.block = new_file->blk.block;
+        rfa->rblk.index = new_file->blk.index;
+        save_index_node(rfa);
+    }
 
-    // 在硬盘的索引树中更新 rfa 和 new_file 节点
-    save_index_node(rfa);
+    // 在硬盘的索引树中更新 new_file 节点
     save_index_node(new_file);
 
     return new_file;
 }
 
-// 删除 p 指向的文件
+// 删除 p 指向的文件/空文件夹
+// 如果是空文件夹, 那么只需要把该索引节点释放, 并更新内存和硬盘中的记录
+// 如果是文件, 那么还需要释放该文件所占用的所有文件块
 void remove_file(struct file_directory *p)
 {
+    // 如果是文件, 释放该文件占用的所有文件块
+    if (p->start_block >= 0) {
+        free_file_block(p->start_block);
+    }
+
     // 文件一定有父指针, 并且没有 left 指针, 要找到该文件在 right 链表中的上一个节点
     struct file_directory *fa = p->father->left;
 
     // 特判: p 就是第一个节点
     if (fa == p) {
+        // 在内存和硬盘中更新 p 的上一个节点的内容
         p->father->left = p->right;
-        mem_free(p, sizeof(struct file_directory));
-        return;
+        if (p->right) {
+            p->father->lblk.block = p->right->blk.block;
+            p->father->lblk.index = p->right->blk.index;
+        }
+        else p->father->lblk.index = 1024;
+        save_index_node(p->father);
+    }
+    else {
+        // p 不是第一个节点, 找到 right 链表中的父节点
+        while (fa->right != p) fa = fa->right;
+        // 在内存和硬盘中更新 fa 
+        fa->right = p->right;
+        if (p->right) {
+            fa->rblk.block = p->right->blk.block;
+            fa->rblk.index = p->right->blk.index;
+        }
+        else fa->rblk.index = 1024;
+        save_index_node(fa);
     }
 
-    while (fa->right != p) fa = fa->right;
-    fa->right = p->right;
+    // 将 p 的记录位释放, 将 p 从内存中释放
+    free_index_node(&p->blk);
     mem_free(p, sizeof(struct file_directory));
 }
 
@@ -287,7 +350,7 @@ void remove_directory(struct file_directory *p)
         path_now = &path_root;
     }
 
-    // 递归删除左子树中的内容 
+    // 递归删除左子树中的内容
     for (struct file_directory* i = p->left; i; i = i->right) {
         remove_directory(i);
     }
