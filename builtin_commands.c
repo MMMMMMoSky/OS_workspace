@@ -3,9 +3,9 @@
 #include "proc.h"
 
 extern struct file_directory path_root;  // root
-extern struct file_directory *path_now;  // file system path now
+extern struct file_directory *term_path[MAX_TERMINAL_CNT]; 
 
-struct terminal * terminal_table[MAX_TERMINAL_CNT] ;
+struct terminal * terminal_table[MAX_TERMINAL_CNT];
 extern struct lock lock_kb;
 extern struct lock lock_video;
 extern struct proc_struct_simple proc_arr[MAX_PROCS];
@@ -695,7 +695,7 @@ struct file_directory* parse_path_and_name(const char *path,
 
 void cmd_cd(const char *param)
 {
-    struct file_directory *res = parse_path(param, path_now);
+    struct file_directory *res = parse_path(param, term_path[cur_term]);
     if (res == 0) {
         prints("Error: invalid path\n");
     }
@@ -703,14 +703,14 @@ void cmd_cd(const char *param)
         prints("Error: can not enter a file\n");
     }
     else {
-        path_now = res;
+        term_path[cur_term] = res;
     }
 }
 
 void cmd_touch_mkdir(const char *param, int flag)
 {
     char name[1024];
-    struct file_directory *path = parse_path_and_name(param, path_now, name);
+    struct file_directory *path = parse_path_and_name(param, term_path[cur_term], name);
 
     if (path == 0) {
         printf("Error: invalid path.\n");
@@ -759,11 +759,11 @@ void cmd_touch(const char *param)
 
 void cmd_ls()
 {
-    if (path_now->start_block >= 0) {
+    if (term_path[cur_term]->start_block >= 0) {
         prints("Error: now you are in a file but not a directory\n");
         return;
     }
-    for (struct file_directory *p = path_now->left; p; p = p->right) {
+    for (struct file_directory *p = term_path[cur_term]->left; p; p = p->right) {
         printf("%s  %s\n", (p->start_block < 0 ? "DIR " : "FILE"), p->name);
     }
 }
@@ -771,14 +771,14 @@ void cmd_ls()
 void cmd_pwd()
 {
     // special judge if nowdf is root
-    if (path_now->father == 0) {
+    if (term_path[cur_term]->father == 0) {
         prints("/\n");
         return;
     }
 
     int length = 0;
     char *res = (char*)mem_alloc(4096);
-    struct file_directory *p = path_now;
+    struct file_directory *p = term_path[cur_term];
     for (; p->father; p = p->father) {
         // 将每一级节点名称倒着复制到 res 中
         int pname = 0;
@@ -840,7 +840,7 @@ void cmd_rm(const char *param)
 
     // 2. try to find file/directory
     struct file_directory *p;
-    p = parse_path(path, path_now);
+    p = parse_path(path, term_path[cur_term]);
     if (p == 0) {
         printf("Error: invalid path.\n");
         return ;
@@ -858,7 +858,7 @@ void cmd_rm(const char *param)
 
 void cmd_cat(const char *param)
 {
-    struct file_directory *file = parse_path(param, path_now);
+    struct file_directory *file = parse_path(param, term_path[cur_term]);
     if (file == 0) {
         printf("Error: invalid file path\n");
     }
@@ -1031,7 +1031,7 @@ void cmd_append(const char *param)
     while (*context != ' ') path[length++] = *context++;
     context++;
 
-    struct file_directory *p = parse_path(path, path_now);
+    struct file_directory *p = parse_path(path, term_path[cur_term]);
     if (p == 0 || p->start_block < 0) {
         printf("Error: invalid file path\n");
         printf("Try 'append -h' for more information\n");

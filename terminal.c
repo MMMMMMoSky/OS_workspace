@@ -6,7 +6,9 @@
 
 uint term_cnt = 0;                 // terminal count
 uint cur_term;                     // current terminal
-byte term_vram[MAX_TERMINAL_CNT][VIDEO_MEM_SIZE]; // when terminal goto background, save vram
+byte term_vram[MAX_TERMINAL_CNT][VIDEO_MEM_SIZE];   // when terminal goto background, save vram
+struct file_directory *term_path[MAX_TERMINAL_CNT]; // current terminal path
+extern struct file_directory path_root;  // root
 
 struct terminal * terminal_table[MAX_TERMINAL_CNT] ;
 extern struct lock lock_kb;
@@ -17,8 +19,6 @@ extern unsigned int video_mem;
 extern uint cursor_x, cursor_y;
 
 char cmd_buf[1024];  // TODO: current line, inputing, maybe 1024 too small
-extern struct file_directory path_root;  // root
-extern struct file_directory *path_now;  // file system path now
 
 void store_cur_term_vram()
 {
@@ -190,7 +190,7 @@ void exec_command(char *cmd_line)
 void running_term()
 {
     while (1) {
-        printf("[tty%u] %s $ ",cur_term, path_now->name);
+        printf("[tty%u] %s $ ",cur_term, term_path[cur_term]->name);
 label_lock:
         if(proc_arr[current].video_mem==VIDEO_MEM)
         {
