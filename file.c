@@ -1,7 +1,8 @@
 #include "func_def.h"
 
 struct file_directory path_root;  // root
-struct file_directory *path_now;  // file system path now
+extern uint cur_term;
+extern struct file_directory *term_path[MAX_TERMINAL_CNT]; 
 byte hd_usage[6][1024];           // 前 6 个硬盘块, 储存索引树/硬盘块的使用情况 (详见README)
 
 // hd_buf 缓存一个硬盘块(-1表示没有), hd_buf_blk 表示块号
@@ -195,7 +196,9 @@ byte load_child_node(struct file_directory* node)
 void init_file_system()
 {
     hd_buf_blk = -1;
-    path_now = &path_root;
+    for (uint i = 0; i < MAX_TERMINAL_CNT; i++) {
+        term_path[i] = &path_root;
+    }
 
     // 加载前 6 个块
     for (int i = 0; i < 6; i++) {
@@ -209,7 +212,7 @@ void init_file_system()
             load_index_node(&path_root, &tmp) || // 加载根节点并检查位置储存是否正确
             path_root.rblk.index < 1024 ||       // 根节点不可能有 right 指针
             path_root.father != 0 ||             // 根节点的 father 必须为 0, 除了根节点的 father 之外, 其他节点的 father, left, right 都没有意义
-            load_child_node(path_now)) {         // 加载其他节点
+            load_child_node(term_path[cur_term])) {         // 加载其他节点
 
         unformatted_hard_disk();
 
@@ -348,8 +351,8 @@ void remove_file(struct file_directory *p)
 void remove_directory(struct file_directory *p)
 {
     // 防止野指针: 如果当前路径在被删除的目录之下, 那么把当前路径重新设置到 /
-    if (p == path_now) {
-        path_now = &path_root;
+    if (p == term_path[cur_term]) {
+        term_path[cur_term] = &path_root;
     }
 
     // 递归删除左子树中的内容
