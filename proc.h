@@ -87,6 +87,7 @@ struct proc_struct_simple
 	int prev;
 	unsigned int video_mem;
 	int term;
+	char name[20];
 };
 
 struct lock
@@ -99,7 +100,7 @@ void init_proc();
 void wait_key();
 void switch_proc();
 void initFirstProc();
-int new_proc(unsigned int addr, int priority);
+int new_proc(unsigned int addr, int priority, const char * name);
 void kill_proc(int pid);
 int get_lock(struct lock * lk);
 void release_lock(struct lock * lk);

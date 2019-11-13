@@ -28,7 +28,7 @@ void main()  // bochs address: 0x106
     init_proc();
     init_terminal_table();
     
-    int term_proc = new_proc(running_term, 10);
+    int term_proc = new_proc(running_term, 10, "term-1");
     if (term_proc == 0) {
         printf("Error: failed to start new process.\n");
         printf("Try reboot or FIIIIIIIIIX BUG.\n");
@@ -36,9 +36,10 @@ void main()  // bochs address: 0x106
     }
 
     proc_arr[term_proc].term = 1;
-    set_new_terminal(1);
+    set_new_terminal(1);    //for(;;);
     switch_terminal(proc_arr[term_proc].term);
     terminal_table[1]->pid = term_proc;
+
     awaken(term_proc);
     
     io_sti();

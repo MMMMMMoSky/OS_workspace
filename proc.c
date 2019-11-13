@@ -170,6 +170,8 @@ void initFirstProc()
         //setLdtDesc((2*i+11), &(proc_arr[i].ldt));
     }
 
+    char name[] = "main";
+    memcpy(proc_arr[0].name, name, 5);
     proc_arr[0].state = STA_WAKE;
     proc_arr[0].next = 0;
     proc_arr[0].prev = 0;
@@ -191,12 +193,20 @@ int find_proc()
     return 0;//0表示没有找到，0一定被使用了，所以不会冲突
 }
 
-int new_proc(unsigned int addr, int priority)
+int new_proc(unsigned int addr, int priority, const char * name)
 {
     int i;
     if(!(i=find_proc()))
         return 0;
 
+    int l=0;
+    while(*(name+l)!='\0') l++; 
+    if(l>20) {
+        printf("too long name\n");
+        return;
+    }
+    printf("%d",l);
+    memcpy(proc_arr[i].name, name, l);
     proc_arr[i].priority = priority;
     proc_arr[i].tss.eip = (int) addr;
 	proc_arr[i].tss.eflags = 0x00000606; /* IF = 1; */
@@ -355,12 +365,12 @@ void show_proc_for_user()
     printf("show process information\n");
     for(int i=0;i<MAX_PROCS;i++){
         if(proc_arr[i].state!=STA_END){
-            printf("  pid:%d  state:",i);
+            printf("  pid:%d  name:%s state:",i,proc_arr[i].name);
             if(proc_arr[i].state==STA_SLEEP)printf("sleep ");
             else if(proc_arr[i].state==STA_START)printf("start ");
             else if(proc_arr[i].state==STA_WAKE)printf("wake  ");
 
-            printf("priority:%d\n",proc_arr[i].priority);
+            printf("priority:%d  \n",proc_arr[i].priority);
         }
     }
 }

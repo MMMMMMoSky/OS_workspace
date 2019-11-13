@@ -957,8 +957,11 @@ void cmd_term(const char * param)
     }
     if(terminal_table[t_para]->flag == 0)//创建新终端
     {
+        char name[] = "term-i ";
+        name[5] = '0'+t_para%10;
+        if(t_para>=10) name[6] = '0'+t_para/10;
         //printf("new terminal");
-        int newp = new_proc(running_term, 10);
+        int newp = new_proc(running_term, 10, name);
         if(newp==0){
             printf("error on new proc\n");
             for(;;);
@@ -994,9 +997,27 @@ void cmd_term(const char * param)
 
 }
 
+void test_proc()
+{
+    for(int i=0;i<10;i++){
+        printf("a");
+    }
+    for(;;);
+}
+
 void cmd_proc(const char * param)
 {
-    
+    if(1){
+        char name[] = "proce";
+        int newp = new_proc(test_proc, 10,name);
+        if(newp==0){
+            printf("error on new proc\n");
+            for(;;);
+        }
+        proc_arr[newp].video_mem = VIDEO_MEM;
+        proc_arr[newp].term = cur_term;
+        awaken(newp);
+    }
 }
 
 void cmd_append_help()
