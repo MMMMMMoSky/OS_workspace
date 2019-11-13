@@ -107,3 +107,4 @@ void awaken(int pid);
 void show_proc();
 void exec(int i);
 void sleep(int i);
+void show_proc_for_user();

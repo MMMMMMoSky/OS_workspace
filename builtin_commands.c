@@ -897,7 +897,7 @@ label_test:
         mem_calc();
     }
     else if(!strcmp(param, "ps")){
-
+        show_proc_for_user();
     }
     else if(!strcmp(param, "-h")){
         printf("command: show\n"

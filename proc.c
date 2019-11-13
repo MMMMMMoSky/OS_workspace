@@ -350,6 +350,21 @@ void show_proc()
     }
 }
 
+void show_proc_for_user()
+{
+    printf("show process information\n");
+    for(int i=0;i<MAX_PROCS;i++){
+        if(proc_arr[i].state!=STA_END){
+            printf("  pid:%d  state:",i);
+            if(proc_arr[i].state==STA_SLEEP)printf("sleep ");
+            else if(proc_arr[i].state==STA_START)printf("start ");
+            else if(proc_arr[i].state==STA_WAKE)printf("wake  ");
+
+            printf("priority:%d\n",proc_arr[i].priority);
+        }
+    }
+}
+
 void exec(int i)
 {
     switch_proc();
