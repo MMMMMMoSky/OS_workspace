@@ -134,9 +134,9 @@ struct file_directory
     struct file_directory *right;  // 右兄弟, 相当于一个链表, 处于同一目录下的内容
     struct file_directory *father; // 上级目录
 
-    uint blk, lblk, rblk; // 当前/左/右子节点在硬盘中的位置
+    struct blk_ptr blk, lblk, rblk; // 当前/左/右子节点在硬盘中的位置
 
-    int start_block;      // -1 表示是目录, 否则是文件, 并且记录该文件在硬盘中的块号
+    int start_block;      // -1 表示是目录, 否则是文件, 并且记录该文件在硬盘中的起始块号
 };
 ```
 
@@ -146,17 +146,20 @@ struct file_directory
 
 初始应该从硬盘读入该树结构. 并且在涉及文件操作的时候同时在内存和硬盘中更改这个树结构. 在硬盘中 `left, right, father` 这三个指针没有意义, 因此不储存. 使用 `blk, lblk, rblk` 记录当前节点, 左子节点, 右子节点在硬盘中的位置.
 
-使用一个整型 `blk` 指向硬盘中的某个位置, 硬盘每 512B 为一块, 读写以块为单位:
+```C
+struct blk_ptr
+{
+    uint block, index;   
+};
+```
 
-1. `blk == 0xffffffff` 不存在, 类似于空指针
-2. `blk & 0x1ff` 表示这个位置在某一块的起始字节位置 (0x1ff == 512)
-3. `blk >> 9` 表示这个位置的硬盘块号
+`block` 表示块号, `index` 表示当前块的字节位置. `index >= 1024` 表示不存在.
 
-因此该文件系统最大支持 4GB 的硬盘.
+设定名称最大为 24 位(即 23 个字符), 那么一个 `file_directory` 占 64 byte. 一个块可以储存 16 个节点.
 
-所以一个节点在硬盘中序列化的储存为: `name[], blk, lblk, rblk, start_block`
+### 硬盘块的管理
 
-设定 `MAX_NAME_BYTE` 为 16, 即一个文件/目录名最多 15 个字符, 那么一个节点在硬盘中占 32 个字节. 一个硬盘块可以储存 16 个节点. (`blk & 0x1ff`必然是 32 的倍数)
+对硬盘块的管理与内存管理相似. 
 
 ## 备注
 

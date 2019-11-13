@@ -85,6 +85,6 @@ typedef char *va_list;
 
 // used in file.c
 #define MAX_CONTEXT_BYTE 300
-#define MAX_NAME_BYTE 30
+#define MAX_NAME_BYTE 24
 
 #endif

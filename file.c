@@ -20,7 +20,7 @@ void init_file_system()
 {
     set_string(&path_root, "/");
     path_root.father = path_root.left = path_root.right = 0;
-    path_root.flag = 1;
+    path_root.start_block = -1;
     path_now = &path_root;
 }
 
@@ -29,7 +29,7 @@ struct file_directory* create_new_directory(struct file_directory *path, const c
 {
     // 在目前的设计中, 目录和文件仅有 flag 一项不同, 所以可以复用代码
     struct file_directory *new_directory = create_new_file(path, name);
-    new_directory->flag = 1;
+    new_directory->start_block = -1;
     return new_directory;
 }
 
@@ -43,7 +43,7 @@ struct file_directory* create_new_file(struct file_directory *path, const char *
     new_file->father = path;
     path->left = new_file;
     set_string(new_file, name);
-    new_file->flag = 0;
+    new_file->start_block = 0;  // TODO: real file system
     return new_file;
 }
 
