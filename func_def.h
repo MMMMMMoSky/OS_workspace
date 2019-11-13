@@ -95,7 +95,7 @@ void cmd_pwd();
 void cmd_cat(const char *param);
 void cmd_show(const char * param);
 void cmd_term(const char * param);
-void cmd_append(cosnt char *param);
+void cmd_append(const char *param);
 
 // implement in file.c
 void set_string(struct file_directory *fd, const char *name);
