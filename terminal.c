@@ -190,7 +190,7 @@ void exec_command(char *cmd_line)
 void running_term()
 {
     while (1) {
-        printf("%d, [tty%u] %s $ ",current, cur_term, path_now->name);
+        printf("[tty%u] %s $ ",cur_term, path_now->name);
 label_lock:
         if(proc_arr[current].video_mem==VIDEO_MEM)
         {

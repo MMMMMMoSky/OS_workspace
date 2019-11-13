@@ -78,6 +78,7 @@ void running_term();
 void init_terminal_table();
 void switch_terminal(uint target);
 uint get_new_terminal();
+int set_new_terminal(int n);
 
 // implement in builtin_commands.c
 void cmd_echo(const char *param);
