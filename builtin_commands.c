@@ -718,9 +718,22 @@ void cmd_touch_mkdir(const char *param, int flag)
     }
 
     int length = 0;
-    while (name[length]) length++;
-    if (length > MAX_NAME_BYTE || length < 0) {
-        printf("Error: length of name should be in range of [0, %d]\n", MAX_NAME_BYTE);
+    if (name[0] == '.') {
+        printf("Error: name can not start with '.'\n");
+        return ;
+    }
+    while (name[length]) {
+        if (!(('0' <= name[length] && name[length] <= '9') ||
+            ('a' <= name[length] && name[length] <= 'z') ||
+            ('A' <= name[length] && name[length] <= 'Z') ||
+            name[length] == '.' || name[length] == '_')) {
+            printf("Error: name should only contain 0-9, a-z, A-Z, '_', '.'\n");
+            return ;
+        }
+        length++;
+    }
+    if (length > MAX_NAME_BYTE || length <= 0) {
+        printf("Error: length of name should be in range of [1, %d]\n", MAX_NAME_BYTE);
         return;
     }
 
