@@ -781,18 +781,6 @@ void cmd_pwd()
     mem_free(res, 4096);
 }
 
-void freeall(struct file_directory* nowdf)
-{
-    if (nowdf->right == 0)
-    {
-        mem_free(nowdf, sizeof(struct file_directory));
-        return;
-    }
-    freeall(nowdf->right);
-    mem_free(nowdf, sizeof(struct file_directory));
-    return;
-}
-
 void cmd_rm_help()
 {
     prints(
@@ -857,40 +845,11 @@ void cmd_rm(const char *param)
 
 void cmd_cat(const char *param)
 {
-    // TODO: 暂不支持多个空格
-    uint length = 0;
-    while (param[length]) length++;
-    char *path = (char*)mem_alloc(length);
-    memcpy(path, param, length);
-    path[length] = 0;
-
-    // find last slash
-    uint slash = length;
-    for (uint i = 0; i < length; i++) {
-        if (path[i] == '/') slash = i;
-    }
-
-    struct file_directory *p = 0;
-    if (slash == length) { // no slash, param is just a filename
-        p = parse_path_step(path, length, path_now);
-    }
-    else {
-        path[slash] = 0;
-        struct file_directory *d;
-        d = parse_path(path, path_now);
-        if (d != 0) {
-            p = parse_path_step(path + slash + 1, length - slash - 1, d);
-        }
-    }
-    if (p) {
-        // TODO: real file system
-        // printf("%s\n", p->context);
-    }
-    else {
+    struct file_directory *file = parse_path(param, path_now);
+    if (file == 0) {
         printf("Error: invalid file path\n");
     }
-
-    mem_free(path, length);
+    print_file_context(file);
 }
 
 void cmd_show(const char * param)
