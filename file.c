@@ -402,7 +402,7 @@ void file_append_str(struct file_directory* p, const char* str)
 // 打印文件中的所有内容
 void print_file_context(struct file_directory* p)
 {
-    printf(">>>>>>>>>> file [%s] start\n", p->name);
+    printf("\n>>> file [%s] start\n", p->name);
     uint tot_byte = 0;
     hd_buf_blk = p->start_block;
     while (1) {
@@ -416,5 +416,5 @@ void print_file_context(struct file_directory* p)
         if (*psz <= 1000) break;
         hd_buf_blk = *pnxt;
     }
-    printf("\n<<<<<<<<<< end %u bytes totally\n", tot_byte);
+    printf("<<< end %u bytes totally\n\n", tot_byte);
 }

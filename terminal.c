@@ -195,7 +195,7 @@ void running_term()
     //     return ;
     // }
     while (1) {
-        printf("%d, [tty%u] %s $ ",current, cur_term, path_now->name);
+        printf("[tty%u] %s $ ", cur_term, path_now->name);
         if(get_lock(&lock_kb));
 
         getline(cmd_buf, 1024);

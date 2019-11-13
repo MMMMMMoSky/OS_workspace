@@ -957,7 +957,8 @@ void cmd_append(const char *param)
     }
     else {
         file_append_str(p, context);
-        uint i = 0;
+        file_append_str(p, "\n");  // TODO: 效率略低, 可优化, 直接改 context
+        uint i = 1;
         while (*context) context++, i++;
         printf("%u bytes writen to %s\n", i, p->name);
     }
