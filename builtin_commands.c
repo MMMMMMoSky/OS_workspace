@@ -866,7 +866,25 @@ void cmd_cat(const char *param)
 }
 
 void cmd_show(const char * param)
-{
+{   
+    char *ch;
+    for(ch=param;;ch++){
+        if(*ch=='\0')
+            goto label_test;
+        if(*ch==' ')
+            break;
+    }
+    *ch = '\0';
+    ch++;
+    while(*ch!='\0'){
+        if(*ch!=' '){
+            printf("invalid option!\n");
+            return;
+        }
+        ch++;
+    }
+
+label_test:
     if(!strcmp(param, "hdd")){
         show_hard_info();
     }
@@ -877,6 +895,9 @@ void cmd_show(const char * param)
     else if(!strcmp(param, "pg")){
         printf("page_dir information:\n");
         mem_calc();
+    }
+    else if(!strcmp(param, "ps")){
+
     }
     else if(!strcmp(param, "-h")){
         printf("command: show\n"
