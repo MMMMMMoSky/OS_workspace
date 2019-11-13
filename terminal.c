@@ -174,6 +174,9 @@ void exec_command(char *cmd_line)
     else if(strcmp(cmd_line, "newp") == 0){
         
     }
+    else if (strcmp(cmd_line, "append") == 0) {
+        cmd_append(param);
+    }
     // else if (strcmp(cmd_line, "name") == 0) {
     //     cmd_name(param);
     // }
