@@ -27,16 +27,6 @@ byte load_index_node(struct file_directory *node, struct blk_ptr *pos)
         read_disk(hd_buf_blk, hd_buf);
     }
 
-    // 或许可以使用一句 memcpy 搞定
-    // byte *index = hd_buf + pos->index;
-    // node->blk = *((struct blk_ptr*)index); index += sizeof(struct blk_ptr);
-    // node->lblk = *((struct blk_ptr*)index); index += sizeof(struct blk_ptr);
-    // node->rblk = *((struct blk_ptr*)index); index += sizeof(struct blk_ptr);
-    // node->left = *((struct file_directory**)index); index += sizeof(struct file_directory*);
-    // node->right = *((struct file_directory**)index); index += sizeof(struct file_directory*);
-    // node->father = *((struct file_directory**)index); index += sizeof(struct file_directory*);
-    // node->start_block = *((int*)index); index += sizeof(int);
-    // memcpy(node->name, index, MAX_NAME_BYTE);
     memcpy(node, hd_buf + pos->index, sizeof(struct file_directory));
 
     return node->blk.block != pos->block || node->blk.index != pos->index;
@@ -50,13 +40,67 @@ void save_index_node(struct file_directory *node)
         read_disk(hd_buf_blk, hd_buf);
     }
 
-    memcpy(hd_buf_blk + node->blk.index, node, sizeof(struct file_directory));
-    write_disk(hd_buf_blk, hd_buf_blk);
+    memcpy(hd_buf + node->blk.index, node, sizeof(struct file_directory));
+    write_disk(hd_buf_blk, hd_buf);  // (已经修复, hd_buf_blk) 之前有这么大的bug怎么能正确运行的...
+}
+
+// 分配一个新的索引节点, 并更新内存和硬盘中的记录
+void new_index_node_pos(struct blk_ptr *res)
+{
+    // 遍历, 查找第一个 0 即可
+    res->block = 6;
+    res->index = 0;
+    int idx = 0, bit = 1;
+    while (hd_usage[0][idx] & bit) {
+        if (bit == 0x80) { bit = 1; idx++; }
+        else bit <<= 1;
+        res->index += sizeof(struct file_directory);
+        if (res->index >= 1024) {
+            res->block++;
+            res->index = 0;
+        }
+    }
+
+    // 现在位置已经确定, 更新内存和硬盘中的存储
+    hd_usage[0][idx] |= bit;
+    write_disk(0, hd_usage[0]);
+}
+
+// 分配一个新的硬盘块, 用于储存文件, 更新硬盘和内存中的记录
+// 初始化该块为一个空文件
+int new_file_block()
+{
+    // 从 256 号开始为储存文件的硬盘块
+    // hd_usage[1] ~ hd_usage[5] 储存它们的使用情况
+    int ret = 256;  // 从 256 号开始遍历
+    int id = 1, idx = 0, bit = 1;  // 直接 hd_usage[1][0] 的第一位对应第 256 个硬盘块
+    while (hd_usage[id][idx] & bit) {
+        if (bit == 0x80) {
+            bit = 1;
+            if (idx == 1023) { idx = 0; id++; }
+            else idx++;
+        }
+        else bit <<= 1;
+        ret++;
+    }
+
+    // 位置确定, 更新内存和硬盘中的记录位
+    hd_usage[id][idx] |= bit;
+    write_disk(id, hd_usage[id]); 
+
+    // 将该文件块初始化为全0
+    hd_buf_blk = ret;
+    for (int i = 0; i < 1024; i++) {
+        hd_buf[i] = 0;
+    }
+    write_disk(hd_buf_blk, hd_buf);
+
+    return ret;
 }
 
 void unformatted_hard_disk()
 {
-    printf("\nUnformatted hard disk: do you want to format it? (y/n)");
+    printf("Unformatted hard disk: do you want to format it? (y/n)");
     char line[4];
     getline(line, 4);
     if (line[0] == 'n') {
@@ -69,15 +113,14 @@ void unformatted_hard_disk()
         hd_usage[0][i] = hd_usage[1][i] = hd_usage[2][i] = 0;
         hd_usage[3][i] = hd_usage[4][i] = hd_usage[5][i] = 0;
     }
-    hd_usage[0][7] |= 0x80;  // root node usage
     for (int i = 0; i < 6; i++) {
         write_disk(i, hd_usage[i]);
     }
 
     // 2. create root index
+    new_index_node_pos(&path_root.blk);
     set_string(&path_root, "/");
     path_root.father = path_root.left = path_root.right = 0;
-    path_root.blk.block = 6, path_root.blk.index = 0;
     path_root.lblk.index = path_root.rblk.index = 1024;
     path_root.start_block = -1;
     save_index_node(&path_root);
@@ -118,7 +161,6 @@ byte load_child_node(struct file_directory* node)
 }
 
 // 初始化文件系统
-// TODO: 从磁盘加载
 void init_file_system()
 {
     hd_buf_blk = -1;
@@ -132,7 +174,7 @@ void init_file_system()
     struct blk_ptr tmp;
     tmp.block = 6, tmp.index = 0;
 
-    if (!(hd_usage[0][7] & 0x80) ||          // 检查根目录索引节点是否记录为已使用
+    if (!(hd_usage[0][0] & 1) ||             // 检查根目录索引节点是否记录为已使用
         load_index_node(&path_root, &tmp) || // 加载根节点并检查位置储存是否正确
         path_root.rblk.index < 1024 ||       // 根节点不可能有 right 指针
         path_root.father != 0 ||             // 根节点的 father 必须为 0, 除了根节点的 father 之外, 其他节点的 father, left, right 都没有意义
@@ -153,16 +195,40 @@ struct file_directory* create_new_directory(struct file_directory *path, const c
 }
 
 // 建立新的文件, 调用前必须保证 path 合法并且该 path 目录下不存在 name 文件名/文件夹名
-// 新建成功则返回新建的文件节点指针
+// 返回新建的文件节点指针
 struct file_directory* create_new_file(struct file_directory *path, const char *name)
 {
     struct file_directory* new_file;
     new_file = (struct file_directory*)mem_alloc(sizeof(struct file_directory));
-    new_file->right = path->left;
-    new_file->father = path;
-    path->left = new_file;
+
+    // 设置结构体信息
     set_string(new_file, name);
-    new_file->start_block = 0;  // TODO: real file system
+    new_file->father = path;
+    new_file->left = new_file->right = 0; 
+    new_file->lblk.index = new_file->rblk.index = 1024;
+
+    // 在硬盘中创建该文件的第一个块
+    new_file->start_block = new_file_block();  
+
+    // 获取该节点在硬盘中的储存位置, 并更新内存和硬盘中的记录位
+    new_index_node_pos(&new_file->blk);
+
+    // 找到 path->right 链表的尾节点, 将 new_file 插入其后
+    // 虽然逆序插入 O(1), 但是会增加一次硬盘读写, 所以实际效率更低
+    struct file_directory* rfa;
+    if (path->left == 0) rfa = path;
+    else {
+        rfa = path->left;
+        while (rfa->right) rfa = rfa->right;
+    }
+    rfa->left = new_file;
+    rfa->lblk.block = new_file->blk.block;
+    rfa->lblk.index = new_file->blk.index;
+
+    // 在硬盘的索引树中更新 rfa 和 new_file 节点
+    save_index_node(rfa);
+    save_index_node(new_file);
+
     return new_file;
 }
 
