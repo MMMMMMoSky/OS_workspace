@@ -2,6 +2,11 @@
 
 struct file_directory path_root;  // root
 struct file_directory *path_now;  // file system path now
+byte hd_usage[6][1024];           // 前 6 个硬盘块, 储存索引树/硬盘块的使用情况 (详见README)
+
+// hd_buf 缓存一个硬盘块(-1表示没有), hd_buf_blk 表示块号
+int hd_buf_blk;
+byte hd_buf[1024];
 
 void set_string(struct file_directory *fd, const char *name)
 {
@@ -14,14 +19,94 @@ void set_string(struct file_directory *fd, const char *name)
     fd->name[i] = '\0';
 }
 
+// 从硬盘的某一个位置加载索引节点, 并判断加载位置与节点自身储存的位置是否一致
+byte load_index_node(struct file_directory *node, struct blk_ptr *pos)
+{
+    if (pos->block != hd_buf_blk) {
+        hd_buf_blk = pos->block;
+        read_disk(hd_buf_blk, hd_buf);
+    }
+
+    // 或许可以使用一句 memcpy 搞定
+    // byte *index = hd_buf + pos->index;
+    // node->blk = *((struct blk_ptr*)index); index += sizeof(struct blk_ptr);
+    // node->lblk = *((struct blk_ptr*)index); index += sizeof(struct blk_ptr);
+    // node->rblk = *((struct blk_ptr*)index); index += sizeof(struct blk_ptr);
+    // node->left = *((struct file_directory**)index); index += sizeof(struct file_directory*);
+    // node->right = *((struct file_directory**)index); index += sizeof(struct file_directory*);
+    // node->father = *((struct file_directory**)index); index += sizeof(struct file_directory*);
+    // node->start_block = *((int*)index); index += sizeof(int);
+    // memcpy(node->name, index, MAX_NAME_BYTE);
+    memcpy(node, hd_buf + pos->index, sizeof(struct file_directory));
+
+    return node->blk.block != pos->block || node->blk.index != pos->index;
+}
+
+// 将一个索引节点储存到硬盘中
+void save_index_node(struct file_directory *node)
+{
+    if (node->blk.block != hd_buf_blk) {
+        hd_buf_blk = node->blk.block;
+        read_disk(hd_buf_blk, hd_buf);
+    }
+
+    memcpy(hd_buf_blk + node->blk.index, node, sizeof(struct file_directory));
+    write_disk(hd_buf_blk, hd_buf_blk);
+}
+
+void unformatted_hard_disk()
+{
+    printf("\nUnformatted hard disk: do you want to format it? (y/n)");
+    char line[4];
+    getline(line, 4);
+    if (line[0] == 'n') {
+        printf("Ok, you can shut down now...");
+        while (1);
+    }
+
+    // 1. empty usage
+    for (int i = 0; i < 1024; i++) {
+        hd_usage[0][i] = hd_usage[1][i] = hd_usage[2][i] = 0;
+        hd_usage[3][i] = hd_usage[4][i] = hd_usage[5][i] = 0;
+    }
+    hd_usage[0][7] |= 0x80;  // root node usage
+    for (int i = 0; i < 6; i++) {
+        write_disk(i, hd_usage[i]);
+    }
+
+    // 2. create root index
+    set_string(&path_root, "/");
+    path_root.father = path_root.left = path_root.right = 0;
+    path_root.blk.block = 6, path_root.blk.index = 0;
+    path_root.lblk.index = path_root.rblk.index = 1024;
+    path_root.start_block = -1;
+    save_index_node(&path_root);
+
+    path_now = &path_root;
+}
+
 // 初始化文件系统
 // TODO: 从磁盘加载
 void init_file_system()
 {
-    set_string(&path_root, "/");
-    path_root.father = path_root.left = path_root.right = 0;
-    path_root.start_block = -1;
+    hd_buf_blk = -1;
+
+    // 加载前 6 个块
+    for (int i = 0; i < 6; i++) {
+        read_disk(i, hd_usage[i]); 
+    }
+
+    struct blk_ptr tmp;
+    tmp.block = 6, tmp.index = 0;
+    // 检查根目录索引节点是否记录为已使用, 以及位置储存是否正确
+    if (!(hd_usage[0][7] & 0x80) || load_index_node(&path_root, &tmp)) {
+        unformatted_hard_disk();
+        return;
+    }
+
     path_now = &path_root;
+    // 加载其他索引节点
+    // TODO
 }
 
 // 建一个新的目录, 左孩子右兄弟上面是父节点模式
