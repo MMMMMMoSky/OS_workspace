@@ -81,8 +81,40 @@ void unformatted_hard_disk()
     path_root.lblk.index = path_root.rblk.index = 1024;
     path_root.start_block = -1;
     save_index_node(&path_root);
+}
 
-    path_now = &path_root;
+// 根据 node 的 lblk 和 rblk 从硬盘加载它的左右子节点
+// 检查位置是否一致并设置指针
+byte load_child_node(struct file_directory* node)
+{
+    if (node->lblk.index < 1024) {
+        node->left = (struct file_directory*)mem_alloc(sizeof(struct file_directory));
+        if (load_index_node(node->left, &node->lblk) ||  // 先加载左子节点
+            load_child_node(node->left)) {               // 然后递归加载左子树
+            mem_free(node->left, sizeof(struct file_directory));
+            return 1;
+        }
+    }
+    else {
+        node->left = 0;
+    }
+    if (node->rblk.index < 1024) {
+        node->right = (struct file_directory*)mem_alloc(sizeof(struct file_directory));
+        if (load_index_node(node->right, &node->rblk) ||
+            load_child_node(node->right)) {
+            mem_free(node->right, sizeof(struct file_directory));
+            return 1;
+        }
+    }
+    else {
+        node->right = 0;
+    }
+
+    // 设置 father 
+    for (struct file_directory* p = node->left; p; p = p->right) {
+        p->father = node;
+    }
+    return 0;
 }
 
 // 初始化文件系统
@@ -90,6 +122,7 @@ void unformatted_hard_disk()
 void init_file_system()
 {
     hd_buf_blk = -1;
+    path_now = &path_root;
 
     // 加载前 6 个块
     for (int i = 0; i < 6; i++) {
@@ -98,15 +131,16 @@ void init_file_system()
 
     struct blk_ptr tmp;
     tmp.block = 6, tmp.index = 0;
-    // 检查根目录索引节点是否记录为已使用, 以及位置储存是否正确
-    if (!(hd_usage[0][7] & 0x80) || load_index_node(&path_root, &tmp)) {
-        unformatted_hard_disk();
-        return;
-    }
 
-    path_now = &path_root;
-    // 加载其他索引节点
-    // TODO
+    if (!(hd_usage[0][7] & 0x80) ||          // 检查根目录索引节点是否记录为已使用
+        load_index_node(&path_root, &tmp) || // 加载根节点并检查位置储存是否正确
+        path_root.rblk.index < 1024 ||       // 根节点不可能有 right 指针
+        path_root.father != 0 ||             // 根节点的 father 必须为 0, 除了根节点的 father 之外, 其他节点的 father, left, right 都没有意义
+        load_child_node(path_now)) {         // 加载其他节点
+
+        unformatted_hard_disk();
+
+    }
 }
 
 // 建一个新的目录, 左孩子右兄弟上面是父节点模式
