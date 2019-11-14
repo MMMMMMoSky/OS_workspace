@@ -22,12 +22,22 @@ char cmd_buf[1024];  // TODO: current line, inputing, maybe 1024 too small
 
 void store_cur_term_vram()
 {
-    memcpy(terminal_table[cur_term]->term_vram, (byte*)VIDEO_MEM, VIDEO_MEM_SIZE);
+    int len = terminal_table[cur_term]->cmd_len;
+    memcpy(
+        terminal_table[cur_term]->term_vram + (len) * VIDEO_X_SZ *2,
+        (byte*)VIDEO_MEM, 
+        VIDEO_MEM_SIZE
+    );
 }
 
 void load_cur_term_vram()
 {
-    memcpy((byte*)VIDEO_MEM, terminal_table[cur_term]->term_vram, VIDEO_MEM_SIZE);
+    int len = terminal_table[cur_term]->cmd_len;
+    memcpy(
+        (byte*)VIDEO_MEM, 
+        terminal_table[cur_term]->term_vram + (len) * VIDEO_X_SZ *2,
+        VIDEO_MEM_SIZE
+    );
 }
 
 void switch_terminal(uint target)
@@ -65,9 +75,14 @@ void init_terminal_table()
         terminal_table[i] = mem_alloc(sizeof(struct terminal));
         terminal_table[i]->flag = 0;
         terminal_table[i]->cmd_len = 0;
-        terminal_table[i]->term_vram = mem_alloc(4000);
+        terminal_table[i]->term_vram = 0x3000000 + (4000*50*i);
+        for(char *j = 0x3000000+(4000*50*i);j<0x3000000+(4000*50*(i+1));j+=2){
+            *j = 0;
+            *(j+1) = 0x0f;
+        }
         terminal_table[i]->x = 0;
         terminal_table[i]->y = 0;
+        terminal_table[i]->line = 0;
     }
     printf("init terminal ok!\n");
     return ;
@@ -185,6 +200,7 @@ void exec_command(char *cmd_line)
     *first_space = old;
 }
 
+extern struct byte_buffer kb_buf;
 // terminal process; start this function after all os init done
 // terminal process; start this function after all os init done
 void running_term()
@@ -195,6 +211,12 @@ label_lock:
         if(proc_arr[current].video_mem==VIDEO_MEM)
         {
             if(get_lock(&lock_kb));
+            // while(1){
+            //     if(kb_buf.length!=0){
+            //         int data = get_byte_buffer(&kb_buf);
+            //         printf("%d ",data);
+            //     }
+            // }
             getline(cmd_buf, 1024);
             exec_command(cmd_buf);  // parse and execute command
         }

@@ -64,12 +64,13 @@ struct file_directory
 
 struct terminal{
     int flag;
-    int cmd_len;
+    int cmd_len;//当前屏幕第一行显示所在的位置
     char cmd_buf[1024];
     byte * term_vram;
     int x;
     int y;
     int pid;
+    int line;//总长度
 };
 
 #endif

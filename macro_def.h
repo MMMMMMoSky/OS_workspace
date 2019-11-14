@@ -24,6 +24,7 @@ typedef char *va_list;
 #define VIDEO_MEM_SIZE 4000  // 80 * 25 * 2
 #define VIDEO_X_SZ 80
 #define VIDEO_Y_SZ 25
+#define ALL_Y_SZ   25 * 2
 
 // GDT set up in setup.S
 #define GDT_ADDR 0x59700  // GDT_SEG_ADDR in setup.S

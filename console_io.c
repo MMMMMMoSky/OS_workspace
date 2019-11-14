@@ -182,9 +182,15 @@ char kb_decode(byte data)
     return 0;
 }
 
+int flag = 0;
+extern uint cur_term; 
+extern struct terminal * terminal_table[MAX_TERMINAL_CNT] ;
+extern uint cursor_x, cursor_y;
+int no_cursor;
 void getline(char *line, int max_len)
 {
     int len = 0;
+    no_cursor = 0;
     while (len < max_len - 1) {  // -1 (reserve a place for '\0')
         if (kb_buf.length == 0) continue;
         io_cli();
@@ -214,6 +220,93 @@ void getline(char *line, int max_len)
             break;  // parse command
         }
         if (data == ENTER_UP || data == BACKSPACE_UP) continue;
+
+        //上下判断
+        if(data == 224){
+            flag = 1;
+            continue;
+        }
+        if(flag && data==72){
+            flag = 0;
+            //向上移动屏幕
+            //每一行相对于屏幕的位置向下移动
+            if(terminal_table[cur_term]->cmd_len==0) continue;
+            //存储当前行
+            if(terminal_table[cur_term]->line - terminal_table[cur_term]->cmd_len == cursor_y)
+            {   
+                memcpy(
+                (byte*)(terminal_table[cur_term]->term_vram + (terminal_table[cur_term]->line) * VIDEO_X_SZ * 2), 
+                (byte*)(VIDEO_MEM + (24) * VIDEO_X_SZ * 2), 
+                VIDEO_X_SZ * 2
+                );
+            }
+            for (int i = VIDEO_Y_SZ-2 ; i >= 0; i--)
+            {
+                memcpy(
+                    (byte*)(VIDEO_MEM + (i + 1) * VIDEO_X_SZ * 2), 
+                    (byte*)(VIDEO_MEM + i * VIDEO_X_SZ * 2), 
+                    VIDEO_X_SZ * 2
+                );
+            }
+            memcpy(
+                    (byte*)(VIDEO_MEM + 0 * VIDEO_X_SZ * 2), 
+                    (byte*)(terminal_table[cur_term]->term_vram + (terminal_table[cur_term]->cmd_len-1) * VIDEO_X_SZ * 2), 
+                    VIDEO_X_SZ * 2
+                );
+            terminal_table[cur_term]->cmd_len--;
+            cursor_y = terminal_table[cur_term]->line - terminal_table[cur_term]->cmd_len;
+            if(cursor_y >= 25) cursor_y = 24;
+            v_move_cursor(cursor_x, cursor_y);
+            continue;
+        }
+        else if(flag && data==80){
+            flag = 0;
+            //向下移动屏幕
+            //每一行相对向下移动
+            if(terminal_table[cur_term]->cmd_len + 1 >= terminal_table[cur_term]->line )continue;
+            if(terminal_table[cur_term]->cmd_len + 24 >= ALL_Y_SZ) continue;
+            for (int i = 1 ; i <= VIDEO_Y_SZ-1; i++)
+            {
+                memcpy(
+                    (byte*)(VIDEO_MEM + (i - 1) * VIDEO_X_SZ * 2), 
+                    (byte*)(VIDEO_MEM + i * VIDEO_X_SZ * 2), 
+                    VIDEO_X_SZ * 2
+                );
+            }
+
+            memcpy(
+                    (byte*)(VIDEO_MEM + 24 * VIDEO_X_SZ * 2), 
+                    (byte*)(terminal_table[cur_term]->term_vram + (terminal_table[cur_term]->cmd_len+25) * VIDEO_X_SZ * 2), 
+                    VIDEO_X_SZ * 2
+                );
+            
+            terminal_table[cur_term]->cmd_len++;
+            cursor_y = terminal_table[cur_term]->line - terminal_table[cur_term]->cmd_len;
+            if(cursor_y >= 25) cursor_y = 25;
+            v_move_cursor(cursor_x, cursor_y);
+            continue;
+        }
+        else if(flag){
+            // //...
+            flag = 0;
+            continue;
+        }
+
+
+        if(terminal_table[cur_term]->line-terminal_table[cur_term]->cmd_len > 24)
+        {
+            for(int i=VIDEO_Y_SZ-1;i>=0;i--){
+                memcpy(
+                    (byte*)(VIDEO_MEM + i * VIDEO_X_SZ * 2),
+                    (byte*)(terminal_table[cur_term]->term_vram + 
+                    (terminal_table[cur_term]->line - 24 + i) * VIDEO_X_SZ *2),
+                    VIDEO_X_SZ * 2
+                );
+            }
+            terminal_table[cur_term]->cmd_len = terminal_table[cur_term]->line - 24;
+            cursor_y = 24;
+            continue;
+        }
 
         char c = kb_decode(data);
         if (c == 0) continue;

@@ -205,7 +205,6 @@ int new_proc(unsigned int addr, int priority, const char * name)
         printf("too long name\n");
         return;
     }
-    printf("%d",l);
     memcpy(proc_arr[i].name, name, l);
     proc_arr[i].priority = priority;
     proc_arr[i].tss.eip = (int) addr;

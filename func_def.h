@@ -35,6 +35,7 @@ void v_move_cursor(uint x, uint y);
 void v_backspace();
 void v_putchar(char ch);
 void v_putchar_at(char ch, uint x, uint y, uint color);
+void mem_v_roll_screen();
 
 // implement in console_io.c
 void printc(char c);               // print char
@@ -79,6 +80,8 @@ void init_terminal_table();
 void switch_terminal(uint target);
 uint get_new_terminal();
 int set_new_terminal(int n);
+void store_cur_term_vram();
+void load_cur_term_vram();
 
 // implement in builtin_commands.c
 void cmd_echo(const char *param);
