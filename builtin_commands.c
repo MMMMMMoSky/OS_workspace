@@ -1002,13 +1002,14 @@ void test_proc()
     for(int i=0;i<10;i++){
         printf("a");
     }
+    printf("\n");
     for(;;);
 }
 
 void cmd_proc(const char * param)
 {
     if(1){
-        char name[] = "proce";
+        char name[] = "process";
         int newp = new_proc(test_proc, 10,name);
         if(newp==0){
             printf("error on new proc\n");
