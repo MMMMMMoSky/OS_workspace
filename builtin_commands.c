@@ -396,7 +396,7 @@ void cmd_calc_calc(calc_word* calc_param,int*calc_answer,uint cmd_end)
                      while(!(calc_stack[0].sym == '(' || 
                      ((calc_stack[0].sym == '+'||calc_stack[0].sym == '-')
                      &&(calc_param[param_cmd].calc_sym == 3 ||calc_param[param_cmd].calc_sym == 4))
-                      || calc_param[param_cmd].calc_sym == 6)){
+                      || calc_param[param_cmd].calc_sym == 6) && deep_stack>0 ){
                           houzhui[houzhui_cmd].sym=calc_stack[0].sym;
                           houzhui_cmd++;
                           deep_stack-=1;
