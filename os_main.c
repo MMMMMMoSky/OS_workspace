@@ -22,6 +22,7 @@ void main()  // bochs address: 0x106
     init_pit(&timer_q);
     io_out8(PIC0_IMR, 0xf8);  // 打开键盘和定时器中断
     mem_init_all();
+    video_mem = 0xB8000;
     init_hard_disk();
     init_file_system();
 
