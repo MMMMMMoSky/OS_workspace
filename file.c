@@ -1,4 +1,5 @@
 #include "func_def.h"
+#include "hdreg.h"
 
 struct file_directory path_root;  // root
 extern uint cur_term;
@@ -29,7 +30,7 @@ byte load_index_node(struct file_directory *node, struct blk_ptr *pos)
         read_disk(hd_buf_blk, hd_buf);
     }
 
-    memcpy(node, hd_buf + pos->index, sizeof(struct file_directory));
+    memcpy((byte*)node, hd_buf + pos->index, sizeof(struct file_directory));
 
     return node->blk.block != pos->block || node->blk.index != pos->index;
 }
@@ -42,7 +43,7 @@ void save_index_node(struct file_directory *node)
         read_disk(hd_buf_blk, hd_buf);
     }
 
-    memcpy(hd_buf + node->blk.index, node, sizeof(struct file_directory));
+    memcpy(hd_buf + node->blk.index, (byte*)node, sizeof(struct file_directory));
     write_disk(hd_buf_blk, hd_buf);  // (已经修复, hd_buf_blk) 之前有这么大的bug怎么能正确运行的...
 }
 

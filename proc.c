@@ -166,7 +166,7 @@ void initFirstProc()
         proc_arr[i].tss.cr3 = 0x70000;
         proc_arr[i].tss.ldt = 0;
         proc_arr[i].tss.trace_bitmap = 0x40000000;
-        setTssDesc((i+10), &(proc_arr[i].tss));
+        setTssDesc((i+10), (int)(&(proc_arr[i].tss)));
         //setLdtDesc((2*i+11), &(proc_arr[i].ldt));
     }
 
@@ -203,7 +203,7 @@ int new_proc(unsigned int addr, int priority, const char * name)
     while(*(name+l)!='\0') l++; 
     if(l>20) {
         printf("too long name\n");
-        return;
+        return 0;
     }
     memcpy(proc_arr[i].name, name, l);
     proc_arr[i].priority = priority;

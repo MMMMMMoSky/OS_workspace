@@ -960,13 +960,13 @@ void cmd_term(const char * param)
         name[5] = '0'+t_para%10;
         if(t_para>=10) name[6] = '0'+t_para/10;
         //printf("new terminal");
-        int newp = new_proc(running_term, 10, name);
+        int newp = new_proc((uint)running_term, 10, name);
         if(newp==0){
             printf("error on new proc\n");
             for(;;);
         } 
         proc_arr[newp].video_mem = VIDEO_MEM;
-        proc_arr[current].video_mem = terminal_table[proc_arr[current].term]->term_vram;
+        proc_arr[current].video_mem = (uint)terminal_table[proc_arr[current].term]->term_vram;
         set_new_terminal(t_para);
         proc_arr[newp].term = t_para;//get_new_terminal();
         terminal_table[t_para]->pid =  newp;
@@ -982,7 +982,7 @@ void cmd_term(const char * param)
     //printf("change terminal");
     io_cli();
         proc_arr[terminal_table[t_para]->pid].video_mem = VIDEO_MEM;
-        proc_arr[current].video_mem = terminal_table[proc_arr[current].term]->term_vram;
+        proc_arr[current].video_mem = (uint)terminal_table[proc_arr[current].term]->term_vram;
         
         release_lock(&lock_kb);
         switch_terminal(t_para);
@@ -1009,7 +1009,7 @@ void cmd_proc(const char * param)
 {
     if(1){
         char name[] = "process";
-        int newp = new_proc(test_proc, 10,name);
+        int newp = new_proc((uint)test_proc, 10,name);
         if(newp==0){
             printf("error on new proc\n");
             for(;;);
