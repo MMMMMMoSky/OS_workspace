@@ -18,7 +18,7 @@ void v_backspace()
         cursor_x--;
     }
     v_putchar_at(0, cursor_x, cursor_y, 0x0f);
-    if(proc_arr[current].term==cur_term)
+    if(proc_arr[current].term==cur_term && video_mem==VIDEO_MEM)
         v_move_cursor(cursor_x, cursor_y);
 }
 
@@ -64,7 +64,7 @@ void v_putchar(char ch)
         mem_v_roll_screen();
         terminal_table[cur_term]->line = ALL_Y_SZ - 1;
     }
-    if(proc_arr[current].term==cur_term)
+    if(proc_arr[current].term==cur_term && video_mem==VIDEO_MEM)
         v_move_cursor(cursor_x, cursor_y);
 }
 
@@ -100,6 +100,15 @@ void v_move_cursor(uint x, uint y)
     io_out8(0x3d5, (pos >> 8) & 0xff);
 }
 
+void hide_cursor()
+{
+    io_cli();
+	io_out8(0x3d4, 14);
+	io_out8(0x3d5, 0xff&((4000)>>9));
+	io_out8(0x3d4, 15);
+	io_out8(0x3d5, 0xff&((4000)>>1));
+	io_sti();
+}
 
 extern struct terminal * terminal_table[MAX_TERMINAL_CNT] ;
 void v_roll_screen()

@@ -102,6 +102,7 @@ void cmd_term(const char * param);
 void cmd_append(const char *param);
 void cmd_proc(const char * param);
 void cmd_exit(const char * param);
+void hide_cursor();
 
 // implement in file.c
 void set_string(struct file_directory *fd, const char *name);

@@ -291,7 +291,8 @@ void switch_proc()
         cursor_x = terminal_table[term]->x;
         cursor_y = terminal_table[term]->y;
         cur_term = term;
-        v_move_cursor(cursor_x, cursor_y);
+        if(video_mem==VIDEO_MEM) v_move_cursor(cursor_x, cursor_y);
+        else hide_cursor();
         farjmp(0, proc_arr[j].selector);
     }
     else {

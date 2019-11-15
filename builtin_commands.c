@@ -1000,48 +1000,54 @@ extern struct byte_buffer kb_buf;
 void test_proc()
 {
     int flag = 0;
+    int output = 1;
     while(1){
+        for(int i=0;i<1000000;i++);
+        if(output && video_mem==VIDEO_MEM) printf("a");
+        else if(output && video_mem!=VIDEO_MEM) {
+            printf("b");
+            continue;
+        }
+        if(get_lock(&lock_kb));
         if (kb_buf.length == 0) continue;
         io_cli();
         byte data = get_byte_buffer(&kb_buf);  // 可以优化, 一次取多个
         io_sti();
-                //上下判断
-        if(data == 224){
-            flag = 1;
-            continue;
-        }
-        if(flag && data==72){
-            
-        }
-        else if(flag && data==80){
-            //...
-
-        }
-        else if(flag && data==75){
-
-        }
-        else if(flag && data==77){
-            
-        }
-        else if(flag){
-            flag = 0;
-            continue;
-        }
 
         char c = kb_decode(data);
         if (c == 0) continue;
         if(c == 'q'){
             kill_proc(current);
+            cmd_exit("q");
+        }
+        else if(c == 's'){
+            io_cli();
+                int fp = proc_arr[current].prev;
+                proc_arr[fp].video_mem = VIDEO_MEM;
+                proc_arr[current].video_mem = terminal_table[proc_arr[current].term]->term_vram;
+                release_lock(&lock_kb);
+                switch_terminal(proc_arr[fp].term);
+            io_sti();
+                awaken(fp);
+loop_p: 
+            if(video_mem==VIDEO_MEM)
+                goto loop_p;                
+        }
+        else if(c == 'c'){
+            output = 1;
         }
         else if(c == 'z'){
-            sleep(current);
+            output = 0;
+        }
+        else if(c == 't'){
+            hide_cursor();
         }
     }
 }
 
 void cmd_proc(const char * param)
 {
-    if(1){
+    if(strcmp(proc_arr[proc_arr[current].next].name, "process")!=0){
         char name[] = "process";
         int newp = new_proc((uint)test_proc, 10, name);
         if(newp==0){
@@ -1060,6 +1066,20 @@ void cmd_proc(const char * param)
         sleep(current);
         awaken(newp);
         exec(newp);
+    }
+    else {
+    io_cli();
+        int p = proc_arr[current].next;
+        proc_arr[p].video_mem = VIDEO_MEM;
+        proc_arr[current].video_mem = (uint)terminal_table[proc_arr[current].term]->term_vram;
+        
+        release_lock(&lock_kb);
+        switch_terminal(proc_arr[p].term);
+
+    io_sti();
+        sleep(current);
+        awaken(terminal_table[proc_arr[p].term]->pid);
+        exec(terminal_table[proc_arr[p].term]->pid);
     }
 }
 
