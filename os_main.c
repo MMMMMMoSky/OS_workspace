@@ -7,7 +7,7 @@ struct timer_queue timer_q;
 struct timer timer1,timer2,timer3;
 char routine[MAX_CONTEXT_BYTE];
 extern struct proc_struct_simple proc_arr[MAX_PROCS];
-extern unsigned int video_mem, cursor_x, cursor_y;
+extern uint video_mem, cursor_x, cursor_y;
 extern struct terminal * terminal_table[MAX_TERMINAL_CNT] ;
 
 void main()  // bochs address: 0x106
@@ -22,8 +22,8 @@ void main()  // bochs address: 0x106
     init_pit(&timer_q);
     io_out8(PIC0_IMR, 0xf8);  // 打开键盘和定时器中断
     mem_init_all();
-    video_mem = 0xB8000;
     init_hard_disk();
+    video_mem = VIDEO_MEM;  // 修复写了终端翻页之后 init_file_system() 无法正常输入输出的问题
     init_file_system();
 
     init_proc();
@@ -37,7 +37,7 @@ void main()  // bochs address: 0x106
     }
 
     proc_arr[term_proc].term = 1;
-    set_new_terminal(1);    //for(;;);
+    set_new_terminal(1);    
     switch_terminal(proc_arr[term_proc].term);
     terminal_table[1]->pid = term_proc;
 
