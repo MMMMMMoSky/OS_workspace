@@ -82,6 +82,7 @@ uint get_new_terminal();
 int set_new_terminal(int n);
 void store_cur_term_vram();
 void load_cur_term_vram();
+void kill_terminal(int n);
 
 // implement in builtin_commands.c
 void cmd_echo(const char *param);

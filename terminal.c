@@ -118,7 +118,18 @@ void kill_terminal(int n)
     if(terminal_table[n]->flag==0)
         return;
     terminal_table[n]->flag = 0;
-    term_cnt++;
+    terminal_table[n]->x = 0;
+    terminal_table[n]->y = 0;
+    term_cnt--;
+    terminal_table[n]->cmd_len = 0;
+    terminal_table[n]->line = 0;
+    terminal_table[n]->pid = 0;
+    for(char *j = (char*)(0x3000000+(4000*50*n));j<(char*)(0x3000000+(4000*50*(n+1)));j+=2){
+        *j = 0;
+        *(j+1) = 0x0f;
+    }
+    cursor_x = 0;
+    cursor_y = 0;
 }
 
 // start a new terminal and make it foreground

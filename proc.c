@@ -244,6 +244,8 @@ void kill_proc(int i)
         for(;;);
     }
     io_cli();
+    proc_arr[i].name[0] = '\0';
+    proc_arr[i].priority = 0;
     int p = proc_arr[i].prev;
     int n = proc_arr[i].next;
     proc_arr[p].next = n;

@@ -1018,7 +1018,15 @@ void test_proc()
         if (c == 0) continue;
         if(c == 'q'){
             kill_proc(current);
-            cmd_exit("q");
+            int i = proc_arr[proc_arr[current].prev].term;
+            io_cli();
+                proc_arr[proc_arr[current].prev].video_mem = VIDEO_MEM;
+                release_lock(&lock_kb);
+                switch_terminal(i);
+                kill_terminal(proc_arr[current].term);
+            io_sti();
+                awaken(terminal_table[i]->pid);
+                exec(terminal_table[i]->pid);
         }
         else if(c == 's'){
             io_cli();
