@@ -74,13 +74,13 @@ void mem_printmap(void)
         prints("idle");
     else
         printf("uninited"); 
-    printc('\n\n');
+    printc('\n');
 }
 
 void mem_calc(void)
 {
     int i, j, k, free = 0;
-    int *pg_tbl, *pg_dir = 0x70000;
+    int *pg_tbl, *pg_dir = (int*)0x70000;
 
     for (i = 0; i < PAGING_PAGES; i++)
         if (!mem_map[i])
@@ -191,7 +191,7 @@ void *mem_alloc(uint len)
     if (!bdir->size)
     {
         printf("try to allocate too much memory!");
-        return;
+        return 0;
     }
 
     io_cli();
@@ -210,7 +210,7 @@ void *mem_alloc(uint len)
         free_bucket_desc = bdesc->next;
         bdesc->bucket_size = bdir->size;
         bdesc->refcnt = 0;
-        bdesc->page = bdesc->freeptr = cp = mem_getfreepage();
+        bdesc->page = bdesc->freeptr = (void*)(cp = (char*)mem_getfreepage());
 
         if (!bdesc->page)
         {

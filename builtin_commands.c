@@ -512,8 +512,7 @@ int cmd_calc_get_error(const char*param,int*calc_answer)  //generate criterion
 		// char  is   +   or  -    or   *   or    /   or    (   or    )
 		if(calc_char[calc_cmd]  == '(' || calc_char[calc_cmd] == ')' || 
         calc_char[calc_cmd] == '+'  || calc_char[calc_cmd] == '-' || 
-        calc_char[calc_cmd]  == '*' || calc_char[calc_cmd] == '/'||
-        calc_char[calc_cmd]  == '（' || calc_char[calc_cmd] == '）')
+        calc_char[calc_cmd]  == '*' || calc_char[calc_cmd] == '/')
 		{
             //printf("test\n");
 			switch (calc_char[calc_cmd])
@@ -568,7 +567,7 @@ int cmd_calc_get_error(const char*param,int*calc_answer)  //generate criterion
     int _cmd=1;
     //////////////////////////////////grammatical   analysis//////////////////////////////
     calc_error = cmd_calc_prog(calc_param,&_cmd,cmd_end);
-    if(calc_error == 0) cmd_calc_calc(&calc_param,calc_answer,cmd_end);
+    if(calc_error == 0) cmd_calc_calc((calc_word*)&calc_param,calc_answer,cmd_end);
     //free memory
     return calc_error;     
 }

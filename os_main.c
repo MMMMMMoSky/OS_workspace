@@ -29,7 +29,7 @@ void main()  // bochs address: 0x106
     init_proc();
     init_terminal_table();
     
-    int term_proc = new_proc(running_term, 10, "term-1");
+    int term_proc = new_proc((uint)running_term, 10, "term-1");
     if (term_proc == 0) {
         printf("Error: failed to start new process.\n");
         printf("Try reboot or FIIIIIIIIIX BUG.\n");

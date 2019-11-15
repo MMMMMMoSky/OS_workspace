@@ -75,8 +75,8 @@ void init_terminal_table()
         terminal_table[i] = mem_alloc(sizeof(struct terminal));
         terminal_table[i]->flag = 0;
         terminal_table[i]->cmd_len = 0;
-        terminal_table[i]->term_vram = 0x3000000 + (4000*50*i);
-        for(char *j = 0x3000000+(4000*50*i);j<0x3000000+(4000*50*(i+1));j+=2){
+        terminal_table[i]->term_vram = (byte*)(0x3000000 + (4000*50*i));
+        for(char *j = (char*)(0x3000000+(4000*50*i));j<(char*)(0x3000000+(4000*50*(i+1)));j+=2){
             *j = 0;
             *(j+1) = 0x0f;
         }
