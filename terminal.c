@@ -113,6 +113,14 @@ int set_new_terminal(int n)
     return 1;
 }
 
+void kill_terminal(int n)
+{
+    if(terminal_table[n]->flag==0)
+        return;
+    terminal_table[n]->flag = 0;
+    term_cnt++;
+}
+
 // start a new terminal and make it foreground
 // return id of this terminal
 uint start_new_terminal()
@@ -188,6 +196,9 @@ void exec_command(char *cmd_line)
     }
     else if (strcmp(cmd_line, "append") == 0) {
         cmd_append(param);
+    }
+    else if (strcmp(cmd_line, "exit") == 0) {
+        cmd_exit(param);
     }
     // else if (strcmp(cmd_line, "name") == 0) {
     //     cmd_name(param);

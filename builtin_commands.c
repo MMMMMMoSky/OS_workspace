@@ -996,27 +996,92 @@ void cmd_term(const char * param)
 
 }
 
+extern struct byte_buffer kb_buf;
 void test_proc()
 {
-    for(int i=0;i<10;i++){
-        printf("a");
+    int flag = 0;
+    while(1){
+        if (kb_buf.length == 0) continue;
+        io_cli();
+        byte data = get_byte_buffer(&kb_buf);  // 可以优化, 一次取多个
+        io_sti();
+                //上下判断
+        if(data == 224){
+            flag = 1;
+            continue;
+        }
+        if(flag && data==72){
+            
+        }
+        else if(flag && data==80){
+            //...
+
+        }
+        else if(flag && data==75){
+
+        }
+        else if(flag && data==77){
+            
+        }
+        else if(flag){
+            flag = 0;
+            continue;
+        }
+
+        char c = kb_decode(data);
+        if (c == 0) continue;
+        if(c == 'q'){
+            kill_proc(current);
+        }
+        else if(c == 'z'){
+            sleep(current);
+        }
     }
-    printf("\n");
-    for(;;);
 }
 
 void cmd_proc(const char * param)
 {
     if(1){
         char name[] = "process";
-        int newp = new_proc((uint)test_proc, 10,name);
+        int newp = new_proc((uint)test_proc, 10, name);
         if(newp==0){
             printf("error on new proc\n");
             for(;;);
         }
         proc_arr[newp].video_mem = VIDEO_MEM;
-        proc_arr[newp].term = cur_term;
+        proc_arr[current].video_mem = (uint)terminal_table[proc_arr[current].term]->term_vram;
+        int t = get_new_terminal();
+        proc_arr[newp].term = t;//get_new_terminal();
+        terminal_table[t]->pid =  newp;
+
+        release_lock(&lock_kb);
+        switch_terminal(t);
+
+        sleep(current);
         awaken(newp);
+        exec(newp);
+    }
+}
+
+extern uint term_cnt;
+void cmd_exit(const char * param)
+{
+    if(term_cnt!=1){
+        kill_terminal(proc_arr[current].term);
+        for(int i=1;i<MAX_TERMINAL_CNT;i++){
+            if(terminal_table[i]->flag==1){
+                io_cli();
+                    proc_arr[terminal_table[i]->pid].video_mem = VIDEO_MEM;
+                    release_lock(&lock_kb);
+                    switch_terminal(i);
+                io_sti();
+                    kill_proc(current);
+                    awaken(terminal_table[i]->pid);
+                    exec(terminal_table[i]->pid);
+                    //printf("bbbbbbbbbb\n");
+                return;
+            }
+        }
     }
 }
 
